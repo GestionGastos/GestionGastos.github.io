@@ -99,8 +99,8 @@ logoutButton.addEventListener('click', logoutFunction);
 const selectElement = document.getElementById('select-language');
 
 selectElement.addEventListener('change', () => {
-    if (selectElement.value === "en") {
-        const newPage = currentPage.replace("/es", "/en");
+    if (selectElement.value === "es") {
+        const newPage = currentPage.replace("/en", "/es");
         window.location.replace(newPage);
     }
 });
@@ -514,6 +514,11 @@ createBudget.addEventListener('click', () => {
     newBudgetModal.style.display = 'block';
 });
 
+const createBudgetButton = document.getElementById('create-new-budget');
+createBudgetButton.addEventListener('click', () => {
+    newBudgetModal.style.display = 'block';
+});
+
 // Check additional basic information
 const checkSave = () => {
     const checkboxSave = document.getElementById('check-save');
@@ -568,18 +573,18 @@ buttonNext.addEventListener('click', async () => {
 
     if (validate === '') {
         order = {
-            enero: '1',
-            febrero: '2',
-            marzo: '3',
-            abril: '4',
-            mayo: '5',
-            junio: '6',
-            julio: '7',
-            agosto: '8',
-            septiembre: '9',
-            octubre: '10',
-            noviembre: '11',
-            diciembre: '12'
+            january: '1',
+            febreary: '2',
+            march: '3',
+            april: '4',
+            may: '5',
+            june: '6',
+            july: '7',
+            august: '8',
+            september: '9',
+            october: '10',
+            november: '11',
+            december: '12'
         };
 
         budgeting.order = order[month.toLowerCase()];

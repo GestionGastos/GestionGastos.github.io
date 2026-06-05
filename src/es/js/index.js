@@ -514,6 +514,11 @@ createBudget.addEventListener('click', () => {
     newBudgetModal.style.display = 'block';
 });
 
+const createBudgetButton = document.getElementById('create-new-budget');
+createBudgetButton.addEventListener('click', () => {
+    newBudgetModal.style.display = 'block';
+});
+
 // Check additional basic information
 const checkSave = () => {
     const checkboxSave = document.getElementById('check-save');

@@ -87,29 +87,40 @@
 
         <main id="contact-us-info" class="curriculum-main" style="display:none;">
             <div class="column-25">
-                <h2>Equipo</h2>
-                <p>Ingrid Lissette Gomez Arias</p>
-                <p>Daniel Pineda</p>
-                <p>Hedilberto Vásquez Mayor</p>
-                <p>Santiago Quevedo</p>
+                <section class="card-budgeting">
+                    <h2>Equipo</h2>
+                    <p>Ingrid Lissette Gomez Arias</p>
+                    <p>Daniel Pineda</p>
+                    <p>Hedilberto Vásquez Mayor</p>
+                    <p>Santiago Quevedo</p>
+                </section>
             </div>
             <div class="column-73">
                 <section id="contact-us-form" class="card-budgeting">
                     <h2>Contactanos</h2>
                     <p>Tienes alguna sugerencia, petición, queja, reclamo o mejora, dejanos saber</p>
                     <form>
+                        <label id="label-success-mail" class="label-success" style="display:none;">El correo fue enviado</label>
                         <div class="form-control">
-                            <label>qesantiago@gmail.com</label>
+                            <label>Para:</label>
+                            gestion.control.gastos@gmail.com
                         </div>
                         <div class="form-control">
                             <label>E-Mail</label>
+                            <label id="label-error-email-mail" class="label-error" style="display:none;">El Correo es requerido</label>
                             <input type="text" id="user-email" name="user-email" placeholder="email@ejemplo.com" /> 
+                        </div>
+                        <div class="form-control">
+                            <label>Asunto</label>
+                            <label id="label-error-subject" class="label-error" style="display:none;">El Asunto es requerido</label>
+                            <input type="text" id="subject" name="subject" placeholder="Example: (Complaint ..., Petition ..., etc ...)" />
                         </div>
                          <div class="form-control">
                             <label>Mensaje</label>
+                            <label id="label-error-message" class="label-error" style="display:none;">El mensajes es requerido</label>
                             <textarea id="message" name="message" placeholder="Dejanos tu mensaje ..."></textarea> 
                         </div>
-                        <button type="button" class="btn">Enviar</button>
+                        <button id="send-message" type="button" class="btn">Enviar</button>
                     </form>
                 </section>
             </div>

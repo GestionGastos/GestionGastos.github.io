@@ -5,6 +5,7 @@ const currentPage = window.location.href;
 let newPage = currentPage.replace("/admin/admin.html", "/login.html");
 const isLogged = localStorage.getItem('isLogged');
 const isAdmin = localStorage.getItem('isAdmin');
+const token = localStorage.getItem('token');
 
 if (isLogged === null) {
     window.location.replace(newPage);
@@ -31,7 +32,7 @@ const logoutButton = document.getElementById('logout');
 const logoutFunction = () => {
     fetch(host + '/users/logout', {
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
         },
         method: 'POST',
         body: JSON.stringify({
@@ -63,7 +64,13 @@ jQuery("document").ready(() => {
 });
 
 const getUsers = () => {
-    fetch(host + '/admin/users/')
+    fetch(host + '/admin/users/',
+    {
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        }
+    })
         .then(result => {
             return result.json();
         })
@@ -74,6 +81,7 @@ const getUsers = () => {
                     html = "<table cellspacing='0' class='table'>" +
                             "<thead>" +
                                 "<tr>" +
+                                    "<th>id</th>" +
                                     "<th>E-Mail</th>" +
                                     "<th>Nombre</th>" +
                                     "<th>Apellido</th>" +
@@ -85,14 +93,15 @@ const getUsers = () => {
                     results.forEach(result => {
                         const id = result._id;
                         html += "<tr>" +
+                                    "<td id='user_id'>" + result._id + "</td>" +
                                     "<td>" + result.email + "</td>" +
                                     "<td>" + result.name + "</td>" +
                                     "<td>" + result.lastname + "</td>" +
                                     "<td>" + result.username + "</td>";
                         if (result.deleted === false) {
-                            html += "<td><button type='button' class='btn-delete-table' onclick='deleteUser(" + id + ");'>Eliminar</button>";
+                            html += "<td><button type='button' class='btn-delete-table' onclick='deleteUser(\"" + id + "\");'>Eliminar</button>";
                         } else {
-                            html += "<td><button type='button' onclick='enableUser(" + id + ");'>Habilitar</button>";
+                            html += "<td><button type='button' class='btn-table' onclick='enableUser(\"" + id + "\");'>Habilitar</button>";
                         }
                         html += "<tr>";
                     });
@@ -106,7 +115,12 @@ const getUsers = () => {
 };
 
 const getMails = () => {
-    fetch(host + '/admin/mails/')
+    fetch(host + '/admin/mails/', {
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        }
+    })
         .then(result => {
             return result.json();
         })
@@ -117,6 +131,7 @@ const getMails = () => {
                     html = "<table cellspacing='0' class='table'>" +
                     "<thead>" +
                         "<tr>" +
+                            "<th>id</th>" +
                             "<th>De</th>" +
                             "<th>Asunto</th>" +
                             "<th>Mensaje</th>" +
@@ -127,10 +142,11 @@ const getMails = () => {
                     results.forEach(result => {
                         const id = result._id;
                         html += "<tr>" +
+                                "<td id='mail_id'>" +  id + "</td>" +
                                 "<td>" + result.from + "</td>" +
                                 "<td>" + result.subject + "</td>" +
                                 "<td>" + result.message + "</td>" +
-                                "<td><button type='button' class='btn-delete-table' onclick='deleteMail(" + id + ");'>Eliminar</button>" +
+                                "<td><button type='button' class='btn-delete-table' onclick='deleteMail(\"" + id + "\");'>Eliminar</button>" +
                             "<tr>";
                     });
                     html += "</tbody>" +
@@ -166,7 +182,7 @@ const enableUser = (id) => {
     fetch(host + '/admin/users/enable', {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token 
+            'Authorization': 'Bearer ' + token
         },
         method: 'PUT',
         body: JSON.stringify({
