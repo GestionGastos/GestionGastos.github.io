@@ -46,7 +46,9 @@ jobs:
         uses: actions/configure-pages@v5
 
       - name: Upload artifact
-        use: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
 
       - name: Deploy
         id: deployment
