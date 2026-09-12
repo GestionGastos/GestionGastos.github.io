@@ -14,7 +14,7 @@ import { PublicLayout } from '../../../shared/presentation/PublicLayout.jsx';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../auth/presentation/useAuth.js';
 import { calculateBudgetSummary, calculateBudgetSummaryTotals } from '../../budgets/domain/budgetCalculations.js';
-import { useI18n } from '../../../shared/i18n/i18nProvider.jsx';
+//import { useI18n } from '../../../shared/i18n/i18nProvider.jsx';
 import * as budgetRepository from '../../budgets/infrastructure/budgetRepository.js';
 import { DashboardChart } from './DashboardChart.jsx';
 
