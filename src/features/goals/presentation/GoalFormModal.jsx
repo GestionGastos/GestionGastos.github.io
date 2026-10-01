@@ -186,6 +186,9 @@ const getCurrentDate = () => {
         month = `0${month}`;
     }
     const day = currentDate.getDay();
+    if (day < 10) {
+        day = `0${day}`;
+    }
 
     return `${year}-${month}-${day}`;
 }
