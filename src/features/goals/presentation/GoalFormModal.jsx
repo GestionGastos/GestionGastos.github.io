@@ -185,7 +185,7 @@ const getCurrentDate = () => {
     if (month < 10) {
         month = `0${month}`;
     }
-    const day = currentDate.getDay();
+    let day = currentDate.getDay();
     if (day < 10) {
         day = `0${day}`;
     }
