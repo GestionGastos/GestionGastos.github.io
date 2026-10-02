@@ -178,8 +178,8 @@ function EditableRowsFixedExpenses({ title, addLabel, rows, nameField, amountFie
     <section className="panel">
       <div className="panel-heading">
         <h2>{title}</h2>
-        <Button type="button" variant="secondary" onClick={() => onChange([...rows, { [nameField]: '', [amountField]: '' }])}>
-          <Plus size={18} /> {addLabel}
+        <Button type="button" variant="secondary" aria-label={addLabel} title={addLabel} onClick={() => onChange([...rows, { [nameField]: '', [amountField]: '' }])}>
+          <Plus size={18} />
         </Button>
       </div>
       <div className="editable-rows">
@@ -228,8 +228,8 @@ function EditableRows({ title, addLabel, rows, nameField, amountField, nameLabel
     <section className="panel">
       <div className="panel-heading">
         <h2>{title}</h2>
-        <Button type="button" variant="secondary" onClick={() => onChange([...rows, { [nameField]: '', [amountField]: '' }])}>
-          <Plus size={18} /> {addLabel}
+        <Button type="button" variant="secondary" aria-label={addLabel} title={addLabel} onClick={() => onChange([...rows, { [nameField]: '', [amountField]: '' }])}>
+          <Plus size={18} />
         </Button>
       </div>
       <div className="editable-rows">

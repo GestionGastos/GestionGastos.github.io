@@ -13,10 +13,11 @@ CONTEXTO
 - Ya haz trabajo en la pagina previamente y tienes el contexto teorico y practico
 
 TAREA
-- Estas implementando un nueva vista llamada Facturas (Invoices), tienes un carpeta llamada invoce_view, analizala completamente y entiende que hace
-- Implementa la vista pixel perfect traducciendo los estilos a los usados en la app que estamos construyento
-- Añade traducciones a la pagina (ingles/español) a la vista nueva y verifica las  en las que falten añadelas
-- cuando implementes código trata de identarlo correctamente no lo dejes en una sola linea, que otro desarrollador puede entenderlo
-- Usa la arquitecture del proyecto
-- Ya existe el folder para Invoice trabaja en este fichero y añade lo que requieras al igual que ya existe InvoicePage.jsx trabaja en estos archivos
-- Tienes permisos de modificar el proyecto para agregar estas modificaciones
+- analiza rapidamente los ultimos cambios del proyecto
+- Toma los mockups que estan en la carpeta stitch_smart_finance_manager
+- Se ha agregado un nuevo sidebar, implementala pixel perfect
+- Algunos botones quedan oscuros en el dark mode, ajustalos al verde que tiene los botones CTA del proyecto
+- Todo lo nuevo que agregues no olvides aregarle su traduccione en español e ingles
+- actualmente hay un fallo al momento de crear nuevos presupuesto en el tag de presupuestos, por alguna razon los select de tipo gasto se quedan vacios y son requeridos, encuentra el bug y corrigelo.
+- En presupuesto tenemos los botones "+ Agregar gasto fijo" y "+ Agregar gasto variable" son redundantes deja solo el "+".
+- Si requieres hacerme preguntas para completar tu tarea hazlas.

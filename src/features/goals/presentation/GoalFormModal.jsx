@@ -132,7 +132,7 @@ export const GoalFormModal = ({ onClose, onSubmit }) => {
                     { step === 2 && <GoalCard name={goal.name} target={goal.value} date={goal.objective_date} /> }
                 </div>
                 <div className="modal-actions">
-                    <Button type="button" variant="secondary" onClick={onClose}>
+                    <Button type="button" variant="secondary" className="form-cancel-button" onClick={onClose}>
                         {t('budget.cancel')}
                     </Button>
                     { step < 2 ? (
