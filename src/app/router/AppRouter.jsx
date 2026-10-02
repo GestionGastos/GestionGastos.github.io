@@ -7,6 +7,7 @@ import { LandingPage } from '../../features/marketing/presentation/LandingPage.j
 import { DashboardCleanPage } from '../../features/dashboard/presentation/DashboardCleanPage.jsx';
 import { GoalsPage } from '../../features/goals/presentation/GoalsPage.jsx';
 import { InvoicePage } from '../../features/Invoices/presentation/InvoicePage.jsx';
+import { SettingsPage } from '../../features/settings/presentation/SettingsPage.jsx';
 
 function PrivateRoute({ children }) {
   const { isAuthenticated, user } = useAuth();
@@ -44,6 +45,7 @@ export function AppRouter() {
       <Route path="/app/users/:userId/goals" element={<PrivateRoute><GoalsPage /></PrivateRoute>} />
       <Route path="/app/users/:userId/budgets" element={<PrivateRoute><BudgetsPage /></PrivateRoute>} />
       <Route path="/app/users/:userId/invoices" element={<PrivateRoute><InvoicePage /></PrivateRoute>} />
+      <Route path="/app/users/:userId/settings" element={<PrivateRoute><SettingsPage /></PrivateRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

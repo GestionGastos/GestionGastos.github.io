@@ -13,6 +13,12 @@ export const translations = {
       invoices: 'Facturas',
       logout: 'Salir',
     },
+    sidebar: {
+      modules: 'Módulos integrados', suite: 'Suite', fintrack: 'FinTrack', dashboard: 'Dashboard', financeExpenses: 'Finanzas y gastos',
+      budgets: 'Presupuestos', budgetPlanning: 'Planeación mensual', invoices: 'Facturas', billing: 'Facturación y cobros',
+      goals: 'Metas', financialGoals: 'Objetivos financieros', personalSpace: 'Espacio personal', proPlan: 'Plan Pro',
+      support: 'Soporte', settings: 'Configuración', switchSpace: 'Cambiar espacio',
+    },
     landing: {
       title: 'Controla tu presupuesto mes a mes',
       subtitle:
@@ -148,6 +154,9 @@ export const translations = {
       send: 'Enviar',
       sent: 'Mensaje enviado',
     },
+    settingsPage: {
+      eyebrow: 'Preferencias', title: 'Configuración', description: 'Administra las preferencias de tu espacio personal desde aquí.',
+    },
     profile: {
       title: 'Perfil',
       basic: 'Datos basicos',
@@ -174,6 +183,12 @@ export const translations = {
       goals: 'Goals',
       invoices: 'Invoices',
       logout: 'Log out',
+    },
+    sidebar: {
+      modules: 'Integrated modules', suite: 'Suite', fintrack: 'FinTrack', dashboard: 'Dashboard', financeExpenses: 'Finance and expenses',
+      budgets: 'Budgets', budgetPlanning: 'Monthly planning', invoices: 'Invoices', billing: 'Billing and collections',
+      goals: 'Goals', financialGoals: 'Financial goals', personalSpace: 'Personal space', proPlan: 'Pro Plan',
+      support: 'Support', settings: 'Settings', switchSpace: 'Switch space',
     },
     landing: {
       title: 'Manage your budget month by month',
@@ -309,6 +324,9 @@ export const translations = {
       message: 'Message',
       send: 'Send',
       sent: 'Message sent',
+    },
+    settingsPage: {
+      eyebrow: 'Preferences', title: 'Settings', description: 'Manage your personal workspace preferences here.',
     },
     profile: {
       title: 'Profile',

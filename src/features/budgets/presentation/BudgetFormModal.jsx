@@ -161,7 +161,7 @@ export function BudgetFormModal({ onClose, onSubmit, expenseTypes }) {
       ) : null}
       {step === 2 ? <TagRows rows={tags} setRows={setTags} label={t('budget.tags')} /> : null}
       <div className="modal-actions">
-        <Button type="button" variant="secondary" onClick={onClose}>
+        <Button type="button" variant="secondary" className="form-cancel-button" onClick={onClose}>
           {t('budget.cancel')}
         </Button>
         {step < 2 ? (
@@ -192,7 +192,16 @@ function DynamicRows({ rows, setRows, labels, shape, expenseTypes, t }) {
                 <option key={index} value={type.name}>{t(`budget.${type.name}`)}</option>
               ))}
             </select>*/}
-            <SelectExpenseTypes setRows={setRows} shape={shape} expenseTypes={expenseTypes} t={t} updateRow={updateRow} module="budget-form" />
+            <SelectExpenseTypes
+              setRows={setRows}
+              shape={shape}
+              expenseTypes={expenseTypes}
+              t={t}
+              updateRow={updateRow}
+              index={index}
+              value={row[shape.name]}
+              module="budget-form"
+            />
           </label>
           <label>
             {labels.amount}
@@ -200,8 +209,8 @@ function DynamicRows({ rows, setRows, labels, shape, expenseTypes, t }) {
           </label>
         </div>
       ))}
-      <Button type="button" variant="secondary" onClick={() => setRows((current) => [...current, { [shape.name]: '', [shape.amount]: '' }])}>
-        <Plus size={18} /> {labels.add}
+      <Button type="button" variant="secondary" className="add-row-button" aria-label={labels.add} title={labels.add} onClick={() => setRows((current) => [...current, { [shape.name]: '', [shape.amount]: '' }])}>
+        <Plus size={18} />
       </Button>
     </div>
   );
@@ -216,8 +225,8 @@ function TagRows({ rows, setRows, label }) {
           <input value={row.tag} onChange={(event) => updateRow(setRows, index, 'tag', event.target.value)} />
         </label>
       ))}
-      <Button type="button" variant="secondary" onClick={() => setRows((current) => [...current, { tag: '' }])}>
-        <Plus size={18} /> {label}
+      <Button type="button" variant="secondary" className="add-row-button" aria-label={label} title={label} onClick={() => setRows((current) => [...current, { tag: '' }])}>
+        <Plus size={18} />
       </Button>
     </div>
   );
