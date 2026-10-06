@@ -2700,6 +2700,11 @@ body {
   .app-shell--private .topbar__nav { display: none; }
   .app-shell--private .topbar { justify-content: flex-start; }
   .app-shell--private .topbar .brand { margin-right: auto; }
+  .app-shell:not(.app-shell--private) .topbar { justify-content: flex-start; position: relative; }
+  .app-shell:not(.app-shell--private) .topbar .brand { margin-right: auto; }
+  .app-shell:not(.app-shell--private) .topbar__nav--public { background: var(--color-surface-container-lowest); border: 1px solid var(--color-outline-variant); border-radius: var(--radius); box-shadow: var(--shadow-card); display: none; left: 16px; padding: 6px; position: absolute; right: 16px; top: calc(100% - 4px); z-index: 40; }
+  .app-shell:not(.app-shell--private) .topbar__nav--public.mobile-open { display: grid; }
+  .app-shell:not(.app-shell--private) .topbar__nav--public a { padding: 12px; }
   .mobile-menu-toggle { display: inline-flex; }
   .app-shell--private .app-sidebar.mobile-open { display: flex; box-shadow: 12px 0 36px rgba(0, 0, 0, .35); width: min(86vw, 310px); z-index: 60; }
   .app-sidebar__backdrop.visible { background: rgba(0, 8, 18, .58); border: 0; bottom: 0; display: block; left: 0; position: fixed; right: 0; top: 0; z-index: 50; }

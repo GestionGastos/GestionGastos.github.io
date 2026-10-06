@@ -17,22 +17,20 @@ export function PublicLayout({ children }) {
 
   const header = (
       <header className={`topbar${isAuthenticated ? ' topbar--private' : ''}`}>
-        {isAuthenticated ? (
-          <button type="button" className="mobile-menu-toggle" aria-label={isMobileMenuOpen ? t('sidebar.closeMenu') : t('sidebar.openMenu')} onClick={() => setIsMobileMenuOpen((open) => !open)}>
-            {isMobileMenuOpen ? <X size={21} /> : <Menu size={21} />}
-          </button>
-        ) : null}
+        <button type="button" className="mobile-menu-toggle" aria-label={isMobileMenuOpen ? t('sidebar.closeMenu') : t('sidebar.openMenu')} onClick={() => setIsMobileMenuOpen((open) => !open)}>
+          {isMobileMenuOpen ? <X size={21} /> : <Menu size={21} />}
+        </button>
         <Link className="brand" to="/">
           <span className="brand-mark">◈</span> {t('appName')}
         </Link>
-        <nav className="topbar__nav" aria-label="Principal">
-          <NavLink to="/">{t('nav.home')}</NavLink>
-          {isAuthenticated ? <NavLink to={`${privatePath}/dashboard`}>{t('nav.dashboardClean')}</NavLink> : null}
-          {isAuthenticated ? <NavLink to={`${privatePath}/goals`}>{t('nav.goals')}</NavLink> : null}
-          {isAuthenticated ? <NavLink to={`${privatePath}/budgets`}>{t('nav.budgets')}</NavLink> : null}
-          {isAuthenticated ? <NavLink to={`${privatePath}/invoices`}>{t('nav.invoices')}</NavLink> : null}
-          {!isAuthenticated ? <NavLink to="/login">{t('nav.login')}</NavLink> : null}
-          {!isAuthenticated ? <NavLink to="/registro">{t('nav.register')}</NavLink> : null}
+        <nav className={`topbar__nav${!isAuthenticated ? ' topbar__nav--public' : ''}${isMobileMenuOpen ? ' mobile-open' : ''}`} aria-label="Principal">
+          <NavLink to="/" onClick={() => setIsMobileMenuOpen(false)}>{t('nav.home')}</NavLink>
+          {isAuthenticated ? <NavLink to={`${privatePath}/dashboard`} onClick={() => setIsMobileMenuOpen(false)}>{t('nav.dashboardClean')}</NavLink> : null}
+          {isAuthenticated ? <NavLink to={`${privatePath}/goals`} onClick={() => setIsMobileMenuOpen(false)}>{t('nav.goals')}</NavLink> : null}
+          {isAuthenticated ? <NavLink to={`${privatePath}/budgets`} onClick={() => setIsMobileMenuOpen(false)}>{t('nav.budgets')}</NavLink> : null}
+          {isAuthenticated ? <NavLink to={`${privatePath}/invoices`} onClick={() => setIsMobileMenuOpen(false)}>{t('nav.invoices')}</NavLink> : null}
+          {!isAuthenticated ? <NavLink to="/login" onClick={() => setIsMobileMenuOpen(false)}>{t('nav.login')}</NavLink> : null}
+          {!isAuthenticated ? <NavLink to="/registro" onClick={() => setIsMobileMenuOpen(false)}>{t('nav.register')}</NavLink> : null}
         </nav>
         <div className="topbar__actions">
           <select className="locale-select" aria-label="Idioma" value={locale} onChange={(event) => setLocale(event.target.value)}>
