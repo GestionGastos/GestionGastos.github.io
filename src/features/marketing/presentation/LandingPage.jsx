@@ -9,7 +9,7 @@ export const LandingPage = () => {
     const features = t('landing.features'); 
     return (
         <PublicLayout>
-            <main className="landing landing--fintrack">
+            <main className="landing landing--fintrack module-page module-page--marketing">
                 <section className="landing__hero">
                     <div className="landing__copy">
                         <div className="landing-badge">

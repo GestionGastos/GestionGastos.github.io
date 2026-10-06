@@ -56,7 +56,6 @@ export function BudgetsPage() {
 
   const submitBudget = async (budget) => {
     await budgetRepository.createBudget(effectiveUserId, token, budget);
-    setIsModalOpen(false);
     await loadBudgets();
   };
 
@@ -72,7 +71,7 @@ export function BudgetsPage() {
 
   return (
     <PublicLayout>
-      <main className="dashboard">
+      <main className="dashboard module-page module-page--budgets">
         <section className="dashboard-heading">
           <div>
             <p className="eyebrow">User ID: {effectiveUserId}</p>

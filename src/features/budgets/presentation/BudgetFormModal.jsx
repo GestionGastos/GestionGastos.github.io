@@ -1,235 +1,141 @@
-import { Plus, X } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { Check, Plus, X } from 'lucide-react';
+import { useMemo, useRef, useState } from 'react';
+import { FormFeedback } from '../../../shared/presentation/FormFeedback.jsx';
 import { useI18n } from '../../../shared/i18n/I18nProvider.jsx';
 import { Button } from '../../../shared/presentation/Button.jsx';
 import { Modal } from '../../../shared/presentation/Modal.jsx';
-//import * as expenseTypeRepository from '../infrastructure/expenseTypeRepository.js';
-//import { useAuth } from '../../auth/presentation/useAuth.js';
-//import { useParams } from 'react-router-dom';
 import { SelectMonth } from '../../../shared/presentation/SelectMonth.jsx';
 import { SelectExpenseTypes } from '../../../shared/presentation/SelectExpenseTypes.jsx';
+import { calculateBudgetSummary } from '../domain/budgetCalculations.js';
 
 const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
-export function BudgetFormModal({ onClose, onSubmit, expenseTypes }) {
+export function BudgetFormModal({ onClose, onSubmit, expenseTypes = [] }) {
   const { t } = useI18n();
-  //const { userId } = useParams();
-  //const { token, user } = useAuth();
   const currentYear = new Date().getFullYear();
+  const salaryRef = useRef(null);
+  const tagRef = useRef(null);
   const [step, setStep] = useState(0);
   const [basics, setBasics] = useState({ year: String(currentYear), month: monthNames[new Date().getMonth()], salary: '', save: '0', additionalIncome: '0', cash: '0' });
   const [expenses, setExpenses] = useState([{ expense: '', amount: '' }]);
   const [tags, setTags] = useState([{ tag: '' }]);
-  const [error, setError] = useState('');
-  //const [ expenseTypes, setExpenseTypes ] = useState([]);
+  const [status, setStatus] = useState('idle');
+  const [message, setMessage] = useState('');
+  const [stepErrors, setStepErrors] = useState({});
 
- // const effectiveUserId = userId === 'me' ? user?.id : userId;
+  const steps = useMemo(() => [t('budget.stepBasics'), t('budget.stepExpenses'), t('budget.stepTags'), t('budget.stepConfirmation')], [t]);
+  const cleanExpenses = expenses.filter((item) => item.expense && Number(item.amount) > 0);
+  const cleanTags = tags.filter((item) => item.tag.trim());
+  const preview = useMemo(() => calculateBudgetSummary({ basics, expenses: cleanExpenses, additionals: [], tags: cleanTags }), [basics, cleanExpenses, cleanTags]);
 
-  const steps = useMemo(() => [t('budget.stepBasics'), t('budget.stepExpenses'), t('budget.stepTags')], [t]);
-
-  /*const loadExpenseTypes = async () => {
-    try {
-      const [ expenseTypesResponse ] = await Promise.all([
-        
-      ]);
-
-      setExpenseTypes(expenseTypesResponse.expenseTypes);
-    } catch {
-        console.error("Error al tratar de obtener los tipos de gastos");
+  const validateStep = (targetStep) => {
+    if (targetStep === 0 && (!basics.year || !basics.month || Number(basics.salary) <= 0)) {
+      setStepErrors((current) => ({ ...current, basics: t('budget.requiredBasics') }));
+      salaryRef.current?.focus();
+      return false;
     }
-  }
+    if (targetStep === 1 && !cleanExpenses.length) {
+      setStepErrors((current) => ({ ...current, expenses: t('budget.requiredExpense') }));
+      return false;
+    }
+    if (targetStep === 2 && !cleanTags.length) {
+      setStepErrors((current) => ({ ...current, tags: t('budget.requiredTag') }));
+      tagRef.current?.focus();
+      return false;
+    }
+    return true;
+  };
 
-  useEffect(() => {
-    loadExpenseTypes()
-  }, [effectiveUserId, token]);*/
+  const next = () => {
+    setStatus('validating');
+    if (!validateStep(step)) {
+      setStatus('error');
+      setMessage(t('auth.required'));
+      return;
+    }
+    setStepErrors((current) => ({ ...current, [step === 0 ? 'basics' : step === 1 ? 'expenses' : 'tags']: '' }));
+    setStatus('editing');
+    setMessage('');
+    setStep((current) => current + 1);
+  };
+
+  const goToStep = (nextStep) => {
+    if (nextStep > step && !validateStep(step)) {
+      setStatus('error');
+      setMessage(t('auth.required'));
+      return;
+    }
+    setMessage('');
+    setStep(nextStep);
+  };
+
+  const payload = () => ({
+    order: String(monthNames.findIndex((month) => month === basics.month) + 1),
+    year: basics.year,
+    month: basics.month,
+    basics: { salary: basics.salary, save: basics.save || '0', additionalIncome: basics.additionalIncome || '0', cash: basics.cash || '0' },
+    expenses: cleanExpenses,
+    tags: cleanTags,
+    additionals: [],
+  });
 
   const save = async () => {
-    setError('');
-    const cleanExpenses = expenses.filter((item) => item.expense && item.amount);
-    const cleanTags = tags.filter((item) => item.tag);
-
-    if (!basics.year || !basics.month || Number(basics.salary) <= 0) {
-      setError(t('auth.required'));
-      setStep(0);
+    if (![0, 1, 2].every(validateStep)) {
+      setStatus('error');
+      setMessage(t('auth.required'));
       return;
     }
-
-    if (!cleanExpenses.length) {
-      setError(t('auth.required'));
-      setStep(1);
-      return;
+    setStatus('loading');
+    setMessage(t('budget.savingBudget'));
+    try {
+      await onSubmit(payload());
+      setStatus('success');
+      setMessage(t('budget.saveSuccess', { month: basics.month, year: basics.year, available: new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(preview.available) }));
+      window.setTimeout(onClose, 800);
+    } catch {
+      setStatus('error');
+      setMessage(t('auth.networkError'));
     }
-
-    if (!cleanTags.length) {
-      setError(t('auth.required'));
-      setStep(2);
-      return;
-    }
-
-    await onSubmit({
-      order: String(monthNames.findIndex((month) => month === basics.month) + 1),
-      year: basics.year,
-      month: basics.month,
-      basics: {
-        salary: basics.salary,
-        save: basics.save || '0',
-        additionalIncome: basics.additionalIncome || '0',
-        cash: basics.cash || '0',
-      },
-      expenses: cleanExpenses,
-      tags: cleanTags,
-      additionals: [],
-    });
   };
 
   return (
-    <Modal>
+    <Modal ariaLabel={t('budget.newBudget')}>
       <div className="modal-heading">
-        <div>
-          <p className="eyebrow">{t('budget.newBudget')}</p>
-          <h2>{steps[step]}</h2>
-        </div>
-        <Button type="button" variant="ghost" onClick={onClose} aria-label={t('budget.cancel')}>
-          <X size={18} />
-        </Button>
+        <div><p className="eyebrow">{t('budget.newBudget')}</p><h2 id="budget-wizard-title">{steps[step]}</h2></div>
+        <Button type="button" variant="ghost" onClick={onClose} aria-label={t('budget.cancel')} data-action="close-budget-wizard"><X size={18} /></Button>
       </div>
-      <div className="stepper">
-        {steps.map((label, index) => (
-          <button className={index === step ? 'active' : ''} key={label} type="button" onClick={() => setStep(index)}>
-            {label}
-          </button>
-        ))}
-      </div>
-      {error ? <p className="form-error">{error}</p> : null}
-      {step === 0 ? (
-        <div className="form-stack">
-          <div className="two-column">
-            <label>
-              {t('budget.year')}
-              <input value={basics.year} onChange={(event) => setBasics((current) => ({ ...current, year: event.target.value }))} />
-            </label>
-            <label>
-              {t('budget.month')}
-              <SelectMonth setValue={setBasics} value={basics.month} /> 
-              {/*<select value={basics.month} onChange={(event) => setBasics((current) => ({ ...current, month: event.target.value }))}>
-                {monthNames.map((month) => (
-                  <option key={month} value={month}>
-                    {month}
-                  </option>
-                ))}
-              </select>*/}
-            </label>
-          </div>
-          <label>
-            {t('budget.salary')}
-            <input type="number" value={basics.salary} onChange={(event) => setBasics((current) => ({ ...current, salary: event.target.value }))} />
-          </label>
-          <div className="two-column">
-            <label>
-              {t('budget.savings')}
-              <input type="number" value={basics.save} onChange={(event) => setBasics((current) => ({ ...current, save: event.target.value }))} />
-            </label>
-            <label>
-              {t('budget.additionalIncome')}
-              <input
-                type="number"
-                value={basics.additionalIncome}
-                onChange={(event) => setBasics((current) => ({ ...current, additionalIncome: event.target.value }))}
-              />
-            </label>
-            <label>
-              {t('budget.cash')}
-              <input
-                type="number"
-                min="0"
-                value={basics.cash}
-                onChange={(event) => setBasics((current) => ({ ...current, cash: event.target.value }))}
-              />
-            </label>
-          </div>
-        </div>
-      ) : null}
-      {step === 1 ? (
-        <DynamicRows
-          rows={expenses}
-          setRows={setExpenses}
-          labels={{ name: t('budget.expense'), amount: t('budget.amount'), add: t('budget.addExpense') }}
-          shape={{ name: 'expense', amount: 'amount' }}
-          expenseTypes={expenseTypes}
-          t={t}
-        />
-      ) : null}
-      {step === 2 ? <TagRows rows={tags} setRows={setTags} label={t('budget.tags')} /> : null}
+      <ol className="stepper" aria-label={t('budget.newBudget')}>
+        {steps.map((label, index) => <li key={label}><button className={index === step ? 'active' : index < step ? 'completed' : ''} type="button" onClick={() => goToStep(index)} aria-current={index === step ? 'step' : undefined} aria-label={`${label} (${index < step ? 'completado' : index === step ? 'actual' : 'pendiente'})`} data-action={`budget-step-${index + 1}`}>{index < step ? <Check size={14} /> : index + 1}<span>{label}</span></button></li>)}
+      </ol>
+      <FormFeedback id="budget-feedback" status={status} message={message} />
+      {step === 0 ? <BasicsStep basics={basics} setBasics={setBasics} t={t} salaryRef={salaryRef} error={stepErrors.basics} /> : null}
+      {step === 1 ? <ExpensesStep rows={expenses} setRows={setExpenses} expenseTypes={expenseTypes} t={t} error={stepErrors.expenses} /> : null}
+      {step === 2 ? <TagsStep rows={tags} setRows={setTags} t={t} tagRef={tagRef} error={stepErrors.tags} /> : null}
+      {step === 3 ? <Confirmation basics={basics} expenses={cleanExpenses} tags={cleanTags} available={preview.available} t={t} /> : null}
       <div className="modal-actions">
-        <Button type="button" variant="secondary" className="form-cancel-button" onClick={onClose}>
-          {t('budget.cancel')}
-        </Button>
-        {step < 2 ? (
-          <Button type="button" onClick={() => setStep((current) => current + 1)}>
-            {steps[step + 1]}
-          </Button>
-        ) : (
-          <Button type="button" onClick={save}>
-            {t('budget.save')}
-          </Button>
-        )}
+        {step > 0 ? <Button type="button" variant="ghost" onClick={() => setStep((current) => current - 1)} data-action="previous-budget-step">{step === 1 ? t('budget.backToBasics') : step === 2 ? t('budget.backToExpenses') : t('budget.backToTags')}</Button> : <Button type="button" variant="secondary" className="form-cancel-button" onClick={onClose}>{t('budget.cancel')}</Button>}
+        {step < 3 ? <Button type="button" onClick={next} data-action={`next-budget-step-${step + 1}`}>{step === 0 ? t('budget.nextExpenses') : step === 1 ? t('budget.nextTags') : t('budget.nextConfirmation')}</Button> : <Button type="button" onClick={save} disabled={status === 'loading' || status === 'success'} aria-busy={status === 'loading'} data-action="create-budget">{status === 'loading' ? t('budget.savingBudget') : status === 'error' ? t('budget.retrySave') : t('budget.save')}</Button>}
       </div>
     </Modal>
   );
 }
 
-function DynamicRows({ rows, setRows, labels, shape, expenseTypes, t }) {
-  return (
-    <div className="form-stack">
-      {rows.map((row, index) => (
-        <div className="two-column" key={index}>
-          <label>
-            {labels.name}
-            {/*<input value={row[shape.name]} />*/}
-            {/*<select onChange={(event) => updateRow(setRows, index, shape.name, event.target.value)}>
-              <option value="">Seleccione el tipo de gasto</option>
-              { expenseTypes.map((type, index) => (
-                <option key={index} value={type.name}>{t(`budget.${type.name}`)}</option>
-              ))}
-            </select>*/}
-            <SelectExpenseTypes
-              setRows={setRows}
-              shape={shape}
-              expenseTypes={expenseTypes}
-              t={t}
-              updateRow={updateRow}
-              index={index}
-              value={row[shape.name]}
-              module="budget-form"
-            />
-          </label>
-          <label>
-            {labels.amount}
-            <input type="number" value={row[shape.amount]} onChange={(event) => updateRow(setRows, index, shape.amount, event.target.value)} />
-          </label>
-        </div>
-      ))}
-      <Button type="button" variant="secondary" className="add-row-button" aria-label={labels.add} title={labels.add} onClick={() => setRows((current) => [...current, { [shape.name]: '', [shape.amount]: '' }])}>
-        <Plus size={18} />
-      </Button>
-    </div>
-  );
+function BasicsStep({ basics, setBasics, t, salaryRef, error }) {
+  const update = (field) => (event) => setBasics((current) => ({ ...current, [field]: event.target.value }));
+  return <fieldset className="form-stack" aria-describedby={error ? 'budget-basics-error' : undefined}><legend>{t('budget.basicInfo')}</legend>{error ? <p id="budget-basics-error" className="field-error" role="alert">{error}</p> : null}<div className="two-column"><label htmlFor="budget-year">{t('budget.year')} <span aria-hidden="true">*</span><input id="budget-year" name="budget-year" inputMode="numeric" value={basics.year} onChange={update('year')} required /></label><label htmlFor="budget-month">{t('budget.month')} <span aria-hidden="true">*</span><SelectMonth id="budget-month" name="budget-month" setValue={setBasics} value={basics.month} required /></label></div><label htmlFor="budget-salary">{t('budget.salary')} <span aria-hidden="true">*</span><input ref={salaryRef} id="budget-salary" name="budget-salary" type="number" min="1" value={basics.salary} onChange={update('salary')} required /></label><div className="two-column"><label htmlFor="budget-savings">{t('budget.savings')}<input id="budget-savings" name="budget-savings" type="number" min="0" value={basics.save} onChange={update('save')} /></label><label htmlFor="budget-additional-income">{t('budget.additionalIncome')}<input id="budget-additional-income" name="budget-additional-income" type="number" min="0" value={basics.additionalIncome} onChange={update('additionalIncome')} /></label><label htmlFor="budget-cash">{t('budget.cash')}<input id="budget-cash" name="budget-cash" type="number" min="0" value={basics.cash} onChange={update('cash')} /></label></div></fieldset>;
 }
 
-function TagRows({ rows, setRows, label }) {
-  return (
-    <div className="form-stack">
-      {rows.map((row, index) => (
-        <label key={index}>
-          {label}
-          <input value={row.tag} onChange={(event) => updateRow(setRows, index, 'tag', event.target.value)} />
-        </label>
-      ))}
-      <Button type="button" variant="secondary" className="add-row-button" aria-label={label} title={label} onClick={() => setRows((current) => [...current, { tag: '' }])}>
-        <Plus size={18} />
-      </Button>
-    </div>
-  );
+function ExpensesStep({ rows, setRows, expenseTypes, t, error }) {
+  return <fieldset className="form-stack" aria-describedby={error ? 'budget-expenses-error' : undefined}><legend>{t('budget.fixedExpenses')}</legend>{error ? <p id="budget-expenses-error" className="field-error" role="alert">{error}</p> : null}{rows.map((row, index) => <div className="two-column" key={`expense-${index}`}><label htmlFor={`budget-expense-type-${index}`}>{t('budget.expense')}<SelectExpenseTypes id={`budget-expense-type-${index}`} name={`budget-expense-type-${index}`} setRows={setRows} shape={{ name: 'expense', amount: 'amount' }} expenseTypes={expenseTypes} t={t} updateRow={updateRow} index={index} value={row.expense} module="budget-form" /></label><label htmlFor={`budget-expense-amount-${index}`}>{t('budget.amount')}<input id={`budget-expense-amount-${index}`} name={`budget-expense-amount-${index}`} type="number" min="0" value={row.amount} onChange={(event) => updateRow(setRows, index, 'amount', event.target.value)} /></label></div>)}<Button type="button" variant="secondary" className="add-row-button" data-action="add_budget_expense" aria-label={t('budget.addExpense')} onClick={() => setRows((current) => [...current, { expense: '', amount: '' }])}><Plus size={18} /><span>{t('budget.addExpense')}</span></Button></fieldset>;
+}
+
+function TagsStep({ rows, setRows, t, tagRef, error }) {
+  return <fieldset className="form-stack" aria-describedby="budget-tags-helper"><legend>{t('budget.tags')}</legend><p id="budget-tags-helper" className="field-help">{t('budget.requiredTag')}</p>{error ? <p className="field-error" role="alert">{error}</p> : null}{rows.map((row, index) => <label key={`tag-${index}`} htmlFor={`budget-tag-${index}`}>{`${t('budget.tags')} ${index + 1}`}<input ref={index === 0 ? tagRef : undefined} id={`budget-tag-${index}`} name={`budget-tag-${index}`} value={row.tag} onChange={(event) => updateRow(setRows, index, 'tag', event.target.value)} aria-invalid={Boolean(error && !row.tag)} /></label>)}<Button type="button" variant="secondary" className="add-row-button" data-action="add_budget_tag" aria-label={t('budget.addTag')} onClick={() => setRows((current) => [...current, { tag: '' }])}><Plus size={18} /><span>{t('budget.addTag')}</span></Button></fieldset>;
+}
+
+function Confirmation({ basics, expenses, tags, available, t }) {
+  const currency = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
+  return <section className="budget-confirmation" aria-labelledby="budget-wizard-title"><h3>{t('budget.confirmTitle')}</h3><dl><div><dt>{t('budget.month')}</dt><dd>{basics.month} {basics.year}</dd></div><div><dt>{t('budget.salary')}</dt><dd>{currency.format(Number(basics.salary || 0))}</dd></div><div><dt>{t('budget.fixedExpenses')}</dt><dd>{expenses.length}</dd></div><div><dt>{t('budget.tags')}</dt><dd>{tags.map((tag) => tag.tag).join(', ')}</dd></div><div><dt>{t('budget.available')}</dt><dd>{currency.format(Number(available || 0))}</dd></div></dl></section>;
 }
 
 function updateRow(setRows, index, field, value) {

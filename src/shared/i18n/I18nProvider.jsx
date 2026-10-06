@@ -7,11 +7,22 @@ function getNestedValue(source, path) {
   return path.split('.').reduce((current, key) => current?.[key], source);
 }
 
+function interpolate(value, values) {
+  if (typeof value !== 'string') {
+    return value;
+  }
+
+  return value.replace(/\{(\w+)\}/g, (_, key) => values[key] ?? `{${key}}`);
+}
+
 export function I18nProvider({ children }) {
   const [locale, setLocale] = useState(() => localStorage.getItem('locale') ?? defaultLocale);
 
   const value = useMemo(() => {
-    const t = (key) => getNestedValue(translations[locale], key) ?? getNestedValue(translations[defaultLocale], key) ?? key;
+    const t = (key, values = {}) => interpolate(
+      getNestedValue(translations[locale], key) ?? getNestedValue(translations[defaultLocale], key) ?? key,
+      values,
+    );
     const changeLocale = (nextLocale) => {
       localStorage.setItem('locale', nextLocale);
       setLocale(nextLocale);
