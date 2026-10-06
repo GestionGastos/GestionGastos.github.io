@@ -1,5 +1,6 @@
 import { Link, NavLink } from 'react-router-dom';
-import { ChevronDown, Moon, Settings, Sun, UserRound } from 'lucide-react';
+import { ChevronDown, Menu, Moon, Settings, Sun, UserRound, X } from 'lucide-react';
+import { useState } from 'react';
 import { useAuth } from '../../features/auth/presentation/useAuth.js';
 import { useI18n } from '../i18n/I18nProvider.jsx';
 import { useTheme } from '../theme/ThemeProvider.jsx';
@@ -10,11 +11,17 @@ export function PublicLayout({ children }) {
   const { isAuthenticated, user, logout } = useAuth();
   const { locale, setLocale, t } = useI18n();
   const { theme, toggleTheme } = useTheme();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const privatePath = `/app/users/${user?.id ?? 'me'}`;
 
   const header = (
       <header className={`topbar${isAuthenticated ? ' topbar--private' : ''}`}>
+        {isAuthenticated ? (
+          <button type="button" className="mobile-menu-toggle" aria-label={isMobileMenuOpen ? t('sidebar.closeMenu') : t('sidebar.openMenu')} onClick={() => setIsMobileMenuOpen((open) => !open)}>
+            {isMobileMenuOpen ? <X size={21} /> : <Menu size={21} />}
+          </button>
+        ) : null}
         <Link className="brand" to="/">
           <span className="brand-mark">◈</span> {t('appName')}
         </Link>
@@ -54,7 +61,7 @@ export function PublicLayout({ children }) {
 
   return isAuthenticated ? (
     <div className="app-shell app-shell--private">
-      <AppSidebar userId={user?.id} user={user} t={t} />
+      <AppSidebar userId={user?.id} user={user} t={t} isMobileOpen={isMobileMenuOpen} onMobileClose={() => setIsMobileMenuOpen(false)} />
       <div className="app-shell__content">
         {header}
         {children}

@@ -2690,3 +2690,17 @@ body {
 @media (max-width: 520px) { .invoice-metrics { grid-template-columns: 1fr; }.invoice-table-card { padding: 16px 10px; }.invoice-pagination { align-items: flex-start; flex-direction: column; gap: 14px; }.invoice-heading__actions > button { flex: 1; justify-content: center; }.invoice-sync { padding: 18px; } }
 
 :root[data-theme='light'] .invoice-page { --color-surface: #f8f9ff; --color-surface-container-lowest: #fff; --color-surface-container-low: #eff4ff; --color-surface-container: #e5eeff; --color-surface-container-high: #dce9ff; --color-surface-container-highest: #d3e4fe; --color-on-surface: #0b1c30; --color-on-surface-variant: #45464d; --color-outline-variant: #c6c6cd; --color-primary: #3f465c; --color-secondary: #006c49; --color-on-secondary: #fff; --color-tertiary: #c45d19; --color-error: #ba1a1a; }
+ .autosave-status { color: var(--color-on-surface-variant); font-size: .72rem; font-weight: 700; }
+.autosave-status--saving { color: var(--color-secondary); }
+.mobile-menu-toggle { align-items: center; background: transparent; border: 1px solid var(--color-outline-variant); border-radius: var(--radius); color: var(--color-on-surface); cursor: pointer; display: none; height: 42px; justify-content: center; width: 42px; }
+.app-sidebar__backdrop { display: none; }
+
+@media (max-width: 900px) {
+  .app-mobile-nav { display: none; }
+  .app-shell--private .topbar__nav { display: none; }
+  .app-shell--private .topbar { justify-content: flex-start; }
+  .app-shell--private .topbar .brand { margin-right: auto; }
+  .mobile-menu-toggle { display: inline-flex; }
+  .app-shell--private .app-sidebar.mobile-open { display: flex; box-shadow: 12px 0 36px rgba(0, 0, 0, .35); width: min(86vw, 310px); z-index: 60; }
+  .app-sidebar__backdrop.visible { background: rgba(0, 8, 18, .58); border: 0; bottom: 0; display: block; left: 0; position: fixed; right: 0; top: 0; z-index: 50; }
+}

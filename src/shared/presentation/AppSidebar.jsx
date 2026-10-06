@@ -1,7 +1,7 @@
 import { ArrowLeftRight, ChevronDown, CircleHelp, FileText, Goal, LayoutDashboard, ListChecks, Settings, WalletCards } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
-export function AppSidebar({ userId, t, user }) {
+export function AppSidebar({ userId, t, user, isMobileOpen = false, onMobileClose = () => {} }) {
   const basePath = `/app/users/${userId ?? 'me'}`;
   const modules = [
     { to: `${basePath}/invoices`, label: t('sidebar.invoices'), detail: t('sidebar.billing'), icon: FileText },
@@ -12,7 +12,8 @@ export function AppSidebar({ userId, t, user }) {
 
   return (
     <>
-      <aside className="app-sidebar" aria-label={t('sidebar.modules')}>
+      <button type="button" className={`app-sidebar__backdrop${isMobileOpen ? ' visible' : ''}`} aria-label={t('sidebar.closeMenu')} onClick={onMobileClose} />
+      <aside className={`app-sidebar${isMobileOpen ? ' mobile-open' : ''}`} aria-label={t('sidebar.modules')}>
         <NavLink className="sidebar-brand" to="/">
           <span className="sidebar-brand__mark">◈</span>
           <span>
@@ -34,7 +35,7 @@ export function AppSidebar({ userId, t, user }) {
             </summary>
             <div className="sidebar-group__children">
               {modules.map(({ to, label, detail, icon: Icon }) => (
-                <NavLink key={to} to={to} className={({ isActive }) => `sidebar-nav__item sidebar-nav__item--child${isActive ? ' active' : ''}`}>
+                <NavLink key={to} to={to} onClick={onMobileClose} className={({ isActive }) => `sidebar-nav__item sidebar-nav__item--child${isActive ? ' active' : ''}`}>
                   <Icon size={17} strokeWidth={1.9} />
                   <span>
                     <strong>{label}</strong>
