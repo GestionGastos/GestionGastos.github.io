@@ -14,12 +14,23 @@ export function BudgetEditor({ budget, onSave, expenseTypes }) {
   const [draft, setDraft] = useState(() => createBudgetDraft(budget));
   const [isSaving, setIsSaving] = useState(false);
   const skipAutoSaveRef = useRef(true);
+  const lastSavedExpensesRef = useRef('');
   const previewBudget = useMemo(() => applyBudgetDraftWithCash(budget, draft), [budget, draft]);
   const summary = useMemo(() => calculateBudgetSummary(previewBudget), [previewBudget]);
+  const expensesSignature = useMemo(
+    () => JSON.stringify({ expenses: draft.expenses, additionals: draft.additionals }),
+    [draft.expenses, draft.additionals],
+  );
+
+  if (!lastSavedExpensesRef.current) {
+    lastSavedExpensesRef.current = expensesSignature;
+  }
 
   useEffect(() => {
+    const nextDraft = createBudgetDraft(budget);
     skipAutoSaveRef.current = true;
-    setDraft(createBudgetDraft(budget));
+    lastSavedExpensesRef.current = JSON.stringify({ expenses: nextDraft.expenses, additionals: nextDraft.additionals });
+    setDraft(nextDraft);
   }, [budget?._id]);
 
   useEffect(() => {
@@ -28,17 +39,22 @@ export function BudgetEditor({ budget, onSave, expenseTypes }) {
       return undefined;
     }
 
+    if (lastSavedExpensesRef.current === expensesSignature) {
+      return undefined;
+    }
+
     const timer = window.setTimeout(async () => {
       setIsSaving(true);
       try {
         await onSave(applyBudgetDraftWithCash(budget, draft));
+        lastSavedExpensesRef.current = expensesSignature;
       } finally {
         setIsSaving(false);
       }
     }, 600);
 
     return () => window.clearTimeout(timer);
-  }, [draft, budget?._id]);
+  }, [expensesSignature, budget?._id]);
 
   const updateDraft = (path, value) => {
     setDraft((current) => {
