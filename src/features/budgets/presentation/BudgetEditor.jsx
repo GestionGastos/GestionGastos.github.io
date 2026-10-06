@@ -1,5 +1,5 @@
-import { Minus, Plus, Save, Trash2 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { Minus, Plus, Trash2 } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useI18n } from '../../../shared/i18n/I18nProvider.jsx';
 import { Button } from '../../../shared/presentation/Button.jsx';
 import { applyBudgetDraftWithCash, createBudgetDraft } from '../domain/budgetDraft.js';
@@ -13,12 +13,32 @@ export function BudgetEditor({ budget, onSave, expenseTypes }) {
   const { t } = useI18n();
   const [draft, setDraft] = useState(() => createBudgetDraft(budget));
   const [isSaving, setIsSaving] = useState(false);
+  const skipAutoSaveRef = useRef(true);
   const previewBudget = useMemo(() => applyBudgetDraftWithCash(budget, draft), [budget, draft]);
   const summary = useMemo(() => calculateBudgetSummary(previewBudget), [previewBudget]);
 
   useEffect(() => {
+    skipAutoSaveRef.current = true;
     setDraft(createBudgetDraft(budget));
   }, [budget?._id]);
+
+  useEffect(() => {
+    if (skipAutoSaveRef.current) {
+      skipAutoSaveRef.current = false;
+      return undefined;
+    }
+
+    const timer = window.setTimeout(async () => {
+      setIsSaving(true);
+      try {
+        await onSave(applyBudgetDraftWithCash(budget, draft));
+      } finally {
+        setIsSaving(false);
+      }
+    }, 600);
+
+    return () => window.clearTimeout(timer);
+  }, [draft, budget?._id]);
 
   const updateDraft = (path, value) => {
     setDraft((current) => {
@@ -33,12 +53,6 @@ export function BudgetEditor({ budget, onSave, expenseTypes }) {
       ...current,
       additionals: [...current.additionals, { name: tag, amount: '' }],
     }));
-  };
-
-  const save = async () => {
-    setIsSaving(true);
-    await onSave(applyBudgetDraftWithCash(budget, draft));
-    setIsSaving(false);
   };
 
   return (
@@ -61,9 +75,9 @@ export function BudgetEditor({ budget, onSave, expenseTypes }) {
                 {draft.month}, {draft.year}
               </p>
             </div>
-            <Button type="button" onClick={save} disabled={isSaving}>
-              <Save size={18} /> {t('budget.updateBudget')}
-            </Button>
+            <span className={`autosave-status${isSaving ? ' autosave-status--saving' : ''}`} role="status">
+              {isSaving ? t('budget.saving') : t('budget.autoSaved')}
+            </span>
           </div>
           <BudgetChart budget={previewBudget} />
         </section>
