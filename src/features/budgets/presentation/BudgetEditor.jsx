@@ -43,6 +43,12 @@ export function BudgetEditor({ budget, onSave, expenseTypes }) {
       return undefined;
     }
 
+    // Encontrar la diferencia entre ambos
+    if (!findDifferences(lastSavedExpensesRef.current, expensesSignature)) {
+      return undefined;
+    }
+
+
     const timer = window.setTimeout(async () => {
       setIsSaving(true);
       try {
@@ -387,4 +393,33 @@ function setByPath(target, path, value) {
     cursor = cursor[key];
   });
   cursor[path.at(-1)] = value;
+}
+
+function findDifferences(lastSavedExpensesRef, expensesSignature)
+{
+  let expensesSignatureJson = JSON.parse(expensesSignature);
+  let lastSavedExpensesRefJson = JSON.parse(lastSavedExpensesRef);
+  
+  const { expenses, additionals } = expensesSignatureJson;
+
+  // Se validan los gastos fijos
+  for (let i = 0; i < expenses.length; i++) {
+    if (lastSavedExpensesRefJson.expenses[i] === undefined) {
+      // hay una diferencia
+      if (expenses[i].name === '' || expenses[i].amount === '') {
+        return false; // si encuentra en la diferencia valores vacio no permite hacer el cambio
+      }
+    }
+  }
+
+  // Se valida los gastos adicionales
+  for (let i =0; i < additionals.length; i++) {
+    if (lastSavedExpensesRefJson.additionals[i] === undefined) {
+      if (additionals[i].name === '' || additionals[i].amount === '') {
+        return false; // si encuentra en la diferencia valores vacio no permite hacer el cambio
+      }
+    }
+  }
+
+  return true;
 }
