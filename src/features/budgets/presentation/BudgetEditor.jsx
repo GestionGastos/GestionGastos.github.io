@@ -13,23 +13,25 @@ export function BudgetEditor({ budget, onSave, expenseTypes }) {
   const { t } = useI18n();
   const [draft, setDraft] = useState(() => createBudgetDraft(budget));
   const [isSaving, setIsSaving] = useState(false);
+  const [hasSaved, setHasSaved] = useState(false);
   const skipAutoSaveRef = useRef(true);
-  const lastSavedExpensesRef = useRef('');
+  const lastSavedDraftRef = useRef('');
   const previewBudget = useMemo(() => applyBudgetDraftWithCash(budget, draft), [budget, draft]);
   const summary = useMemo(() => calculateBudgetSummary(previewBudget), [previewBudget]);
-  const expensesSignature = useMemo(
-    () => JSON.stringify({ expenses: draft.expenses, additionals: draft.additionals }),
-    [draft.expenses, draft.additionals],
+  const draftSignature = useMemo(
+    () => createPersistedDraftSignature(draft),
+    [draft],
   );
 
-  if (!lastSavedExpensesRef.current) {
-    lastSavedExpensesRef.current = expensesSignature;
+  if (!lastSavedDraftRef.current) {
+    lastSavedDraftRef.current = draftSignature;
   }
 
   useEffect(() => {
     const nextDraft = createBudgetDraft(budget);
     skipAutoSaveRef.current = true;
-    lastSavedExpensesRef.current = JSON.stringify({ expenses: nextDraft.expenses, additionals: nextDraft.additionals });
+    lastSavedDraftRef.current = createPersistedDraftSignature(nextDraft);
+    setHasSaved(false);
     setDraft(nextDraft);
   }, [budget?._id]);
 
@@ -39,28 +41,28 @@ export function BudgetEditor({ budget, onSave, expenseTypes }) {
       return undefined;
     }
 
-    if (lastSavedExpensesRef.current === expensesSignature) {
+    if (lastSavedDraftRef.current === draftSignature) {
       return undefined;
     }
-
-    // Encontrar la diferencia entre ambos
-    if (!findDifferences(lastSavedExpensesRef.current, expensesSignature)) {
-      return undefined;
-    }
-
 
     const timer = window.setTimeout(async () => {
       setIsSaving(true);
       try {
-        await onSave(applyBudgetDraftWithCash(budget, draft));
-        lastSavedExpensesRef.current = expensesSignature;
+        const nextBudget = applyBudgetDraftWithCash(budget, draft);
+        await onSave(nextBudget);
+        skipAutoSaveRef.current = true;
+        lastSavedDraftRef.current = createPersistedDraftSignature(createBudgetDraft(nextBudget));
+        setDraft(createBudgetDraft(nextBudget));
+        setHasSaved(true);
+      } catch {
+        setHasSaved(false);
       } finally {
         setIsSaving(false);
       }
     }, 600);
 
     return () => window.clearTimeout(timer);
-  }, [expensesSignature, budget?._id]);
+  }, [draftSignature, budget?._id]);
 
   const updateDraft = (path, value) => {
     setDraft((current) => {
@@ -97,8 +99,8 @@ export function BudgetEditor({ budget, onSave, expenseTypes }) {
                 {draft.month}, {draft.year}
               </p>
             </div>
-            <span className={`autosave-status${isSaving ? ' autosave-status--saving' : ''}`} role="status">
-              {isSaving ? t('budget.saving') : t('budget.autoSaved')}
+            <span className={`autosave-status${isSaving ? ' autosave-status--saving' : ''}`} role="status" aria-live="polite">
+              {isSaving ? t('budget.saving') : hasSaved ? t('budget.autoSaved') : t('budget.noPendingChanges')}
             </span>
           </div>
           <BudgetChart budget={previewBudget} />
@@ -110,26 +112,27 @@ export function BudgetEditor({ budget, onSave, expenseTypes }) {
             <div className="two-column">
               <label>
                 {t('budget.year')}
-                <input value={draft.year} onChange={(event) => updateDraft(['year'], event.target.value)} />
+                <input data-testid="budget-editor-year" value={draft.year} onChange={(event) => updateDraft(['year'], event.target.value)} />
               </label>
               <label>
                 {t('budget.month')}
-                <input value={draft.month} onChange={(event) => updateDraft(['month'], event.target.value)} />
+                <input data-testid="budget-editor-month" value={draft.month} onChange={(event) => updateDraft(['month'], event.target.value)} />
               </label>
             </div>
             <label>
               {t('budget.salary')}
-              <input type="number" value={draft.basics.salary} onChange={(event) => updateDraft(['basics', 'salary'], event.target.value)} />
+              <input data-testid="budget-editor-salary" type="number" value={draft.basics.salary} onChange={(event) => updateDraft(['basics', 'salary'], event.target.value)} />
             </label>
             <div className="two-column">
               <label>
                 {t('budget.savings')}
-                <input type="number" value={draft.basics.save} onChange={(event) => updateDraft(['basics', 'save'], event.target.value)} />
+                <input data-testid="budget-editor-savings" type="number" value={draft.basics.save} onChange={(event) => updateDraft(['basics', 'save'], event.target.value)} />
               </label>
               <label>
                 {t('budget.additionalIncome')}
                 <input
                   type="number"
+                  data-testid="budget-editor-additional-income"
                   value={draft.basics.additionalIncome}
                   onChange={(event) => updateDraft(['basics', 'additionalIncome'], event.target.value)}
                 />
@@ -139,6 +142,7 @@ export function BudgetEditor({ budget, onSave, expenseTypes }) {
               Efectivo
               <input
                 type="number" 
+                data-testid="budget-editor-cash"
                 value={draft.basics.cash}
                 onChange={(event) => updateDraft(['basics', 'cash'], event.target.value)}
               />
@@ -185,11 +189,12 @@ export function BudgetEditor({ budget, onSave, expenseTypes }) {
         <div className="tag-editor">
           {draft.tags.map((tag, index) => (
             <div className="tag-editor__row" key={index}>
-              <input value={tag.tag} onChange={(event) => updateDraft(['tags', index, 'tag'], event.target.value)} />
-              <Button type="button" variant="ghost" onClick={() => addFromTag(tag.tag)} disabled={!tag.tag}>
+              <label className="sr-only" htmlFor={`editor-tag-${index}`}>{t('budget.tagN', { n: index + 1 })}</label>
+              <input id={`editor-tag-${index}`} value={tag.tag} onChange={(event) => updateDraft(['tags', index, 'tag'], event.target.value)} />
+              <Button type="button" variant="ghost" onClick={() => addFromTag(tag.tag)} disabled={!tag.tag} aria-label={`${t('budget.addVariableExpense')} ${index + 1}`}>
                 <Plus size={18} /> {t('budget.addVariableExpense')}
               </Button>
-              <IconButton label={t('budget.remove')} onClick={() => removeRow(setDraft, 'tags', index)} />
+              <IconButton label={`${t('budget.remove')} ${t('budget.tagN', { n: index + 1 })}`} onClick={() => removeRow(setDraft, 'tags', index)} />
             </div>
           ))}
         </div>
@@ -221,26 +226,19 @@ function EditableRowsFixedExpenses({ title, addLabel, rows, nameField, amountFie
       <div className="editable-rows">
         {rows.map((row, index) => (
           <div className="editable-row" key={index}>
-            <label>
-              {nameLabel}
-              {/*<input value={row[nameField]} onChange={(event) => update(index, nameField, event.target.value)} />*/}
-              {/*<label>{t(`budget.${row[nameField]}`)}</label>*/}
-              {/*<select onChange={(event) => update(index, nameField, event.target.value)}>
-                { expenseTypes.map((index, type) => (
-                  <option key={index} value={type}>type.</option>
-                )) }
-              </select>*/}
-              <SelectExpenseTypes value={row[nameField]} expenseTypes={expenseTypes} update={update} index={index} nameField={nameField} t={t} />
+            <label htmlFor={`editor-fixed-expense-${index}`}>
+              {t('budget.expenseType', { n: index + 1 })}
+              <SelectExpenseTypes id={`editor-fixed-expense-${index}`} name={`editor-fixed-expense-${index}`} value={row[nameField]} expenseTypes={expenseTypes} update={update} index={index} nameField={nameField} t={t} />
             </label>
             <label>
-              {amountLabel}
+              {t('budget.expenseAmount', { n: index + 1 })}
               <IncrementAmount
                 value={row[amountField]}
                 onChange={(value) => update(index, amountField, value)}
-                label={amountLabel}
+                label={t('budget.expenseAmount', { n: index + 1 })}
               />
             </label>
-            <IconButton label={t('budget.remove')} onClick={() => remove(index)} />
+            <IconButton label={`${t('budget.remove')} ${t('budget.expenseType', { n: index + 1 })}`} onClick={() => remove(index)} />
           </div>
         ))}
       </div>
@@ -271,19 +269,19 @@ function EditableRows({ title, addLabel, rows, nameField, amountField, nameLabel
       <div className="editable-rows">
         {rows.map((row, index) => (
           <div className="editable-row" key={index}>
-            <label>
-              {nameLabel}
-              { <input value={row[nameField]} onChange={(event) => update(index, nameField, event.target.value)} /> }
+            <label htmlFor={`editor-variable-expense-${index}`}>
+              {t('budget.expenseType', { n: index + 1 })}
+              <input id={`editor-variable-expense-${index}`} value={row[nameField]} onChange={(event) => update(index, nameField, event.target.value)} />
             </label>
             <label>
-              {amountLabel}
+              {t('budget.expenseAmount', { n: index + 1 })}
               <IncrementAmount
                 value={row[amountField]}
                 onChange={(value) => update(index, amountField, value)}
-                label={amountLabel}
+                label={t('budget.expenseAmount', { n: index + 1 })}
               />
             </label>
-            <IconButton label={t('budget.remove')} onClick={() => remove(index)} />
+            <IconButton label={`${t('budget.remove')} ${t('budget.expenseType', { n: index + 1 })}`} onClick={() => remove(index)} />
           </div>
         ))}
       </div>
@@ -395,31 +393,16 @@ function setByPath(target, path, value) {
   cursor[path.at(-1)] = value;
 }
 
-function findDifferences(lastSavedExpensesRef, expensesSignature)
-{
-  let expensesSignatureJson = JSON.parse(expensesSignature);
-  let lastSavedExpensesRefJson = JSON.parse(lastSavedExpensesRef);
-  
-  const { expenses, additionals } = expensesSignatureJson;
+function createPersistedDraftSignature(value) {
+  const normalizedDraft = value?.basics ? value : createBudgetDraft(value);
+  const expenses = normalizedDraft.expenses.filter((expense) => expense.expense && Number(expense.amount) > 0);
+  const additionals = normalizedDraft.additionals.filter((expense) => expense.name && Number(expense.amount) > 0);
 
-  // Se validan los gastos fijos
-  for (let i = 0; i < expenses.length; i++) {
-    if (lastSavedExpensesRefJson.expenses[i] === undefined) {
-      // hay una diferencia
-      if (expenses[i].name === '' || expenses[i].amount === '') {
-        return false; // si encuentra en la diferencia valores vacio no permite hacer el cambio
-      }
-    }
-  }
-
-  // Se valida los gastos adicionales
-  for (let i =0; i < additionals.length; i++) {
-    if (lastSavedExpensesRefJson.additionals[i] === undefined) {
-      if (additionals[i].name === '' || additionals[i].amount === '') {
-        return false; // si encuentra en la diferencia valores vacio no permite hacer el cambio
-      }
-    }
-  }
-
-  return true;
+  return JSON.stringify({
+    year: normalizedDraft.year,
+    month: normalizedDraft.month,
+    basics: normalizedDraft.basics,
+    expenses,
+    additionals,
+  });
 }
