@@ -212,6 +212,58 @@ textarea {
   text-align: center;
 }
 
+.button:disabled {
+  cursor: not-allowed;
+  opacity: .72;
+}
+
+.button__spinner {
+  animation: button-spin .7s linear infinite;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  display: inline-block;
+  height: 14px;
+  width: 14px;
+}
+
+@keyframes button-spin {
+  to { transform: rotate(360deg); }
+}
+
+.sr-only {
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  width: 1px;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.error-summary {
+  background: color-mix(in srgb, var(--color-error) 12%, transparent);
+  border-radius: var(--radius);
+  color: var(--color-error);
+  padding: 12px 14px;
+}
+
+.error-summary__title {
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+
+.error-summary ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
 .button--primary {
   background: var(--color-primary);
   color: var(--color-on-primary);

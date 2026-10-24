@@ -11,6 +11,7 @@ import { PublicLayout } from '../../../shared/presentation/PublicLayout.jsx';
 import { BudgetEditor } from './BudgetEditor.jsx';
 import { BudgetFormModal } from './BudgetFormModal.jsx';
 import { calculateGoal } from '../../goals/domain/goalCalculations.js';
+import { sortBudgetHistory } from '../domain/budgetHistory.js';
 
 export function BudgetsPage() {
   const { userId } = useParams();
@@ -35,7 +36,7 @@ export function BudgetsPage() {
         expenseTypeRepository.getExpenseTypes(token),
         goalRepository.getCurrentBudgetGoals(token)
       ]);
-      const nextBudgets = budgetsResponse?.budgets ?? [];
+      const nextBudgets = sortBudgetHistory(budgetsResponse?.budgets ?? []);
       const nextCurrentBudget = currentResponse?.budget?.[0] ?? currentResponse?.budget ?? nextBudgets[0] ?? null;
       const nextGoals = goalResponse?.goals ?? [];
 
@@ -60,13 +61,12 @@ export function BudgetsPage() {
   };
 
   const saveBudget = async (nextBudget) => {
+    await budgetRepository.updateBudget(token, nextBudget);
     setCurrentBudget(nextBudget);
-    setBudgets((current) => current.map((budget) => (budget._id === nextBudget._id ? nextBudget : budget)));
+    setBudgets((current) => sortBudgetHistory(current.map((budget) => (budget._id === nextBudget._id ? nextBudget : budget))));
     if (goals.length > 0) {
       calculateGoal(goals, nextBudget, token);
     }
-    await budgetRepository.updateBudget(token, nextBudget);
-    await loadBudgets();
   };
 
   return (
@@ -78,7 +78,7 @@ export function BudgetsPage() {
             <h1>{t('budget.title')}</h1>
             <p>{t('budget.subtitle')}</p>
           </div>
-          <Button type="button" onClick={() => setIsModalOpen(true)}>
+          <Button type="button" onClick={() => setIsModalOpen(true)} data-action="open-create-budget">
             <Plus size={18} /> {t('budget.newBudget')}
           </Button>
         </section>
@@ -93,7 +93,7 @@ export function BudgetsPage() {
               {budgets.length ? (
                 <div className="history-list">
                   {budgets.map((budget) => (
-                    <button key={budget._id ?? `${budget.year}-${budget.month}`} type="button" onClick={() => setCurrentBudget(budget)}>
+                    <button key={budget._id ?? `${budget.year}-${budget.month}`} type="button" onClick={() => setCurrentBudget(budget)} aria-label={`${budget.month} ${budget.year}`}>
                       <strong>{budget.month}</strong>
                       <span>{budget.year}</span>
                     </button>
