@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { defaultLocale, translations } from './translations.js';
 
 const I18nContext = createContext(null);
@@ -17,6 +17,12 @@ function interpolate(value, values) {
 
 export function I18nProvider({ children }) {
   const [locale, setLocale] = useState(() => localStorage.getItem('locale') ?? defaultLocale);
+
+  useEffect(() => {
+    const syncLocale = () => setLocale(localStorage.getItem('locale') ?? defaultLocale);
+    window.addEventListener('lifesync:locale-updated', syncLocale);
+    return () => window.removeEventListener('lifesync:locale-updated', syncLocale);
+  }, []);
 
   const value = useMemo(() => {
     const t = (key, values = {}) => interpolate(

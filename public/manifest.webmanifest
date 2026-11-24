@@ -1,0 +1,14 @@
+{
+  "id": "/",
+  "name": "LifeSync · Finanzas y vida diaria",
+  "short_name": "LifeSync",
+  "description": "Presupuestos, compras, tareas y rutinas en un solo lugar.",
+  "lang": "es",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#071729",
+  "theme_color": "#071729",
+  "icons": [{ "src": "/lifesync.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

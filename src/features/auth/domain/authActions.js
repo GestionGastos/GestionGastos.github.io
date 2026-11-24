@@ -17,6 +17,8 @@ export function validateRegisterForm(form, messages) {
     errors.confirmPassword = messages.passwordMismatch;
   }
 
+  if (!form.termsAccepted) errors.termsAccepted = messages.termsRequired;
+
   return errors;
 }
 
@@ -50,7 +52,7 @@ export async function executeRegisterUser(form, signUp, messages) {
   }
 
   try {
-    const { confirmPassword: _confirmPassword, ...payload } = form;
+    const payload = Object.fromEntries(['name', 'lastname', 'username', 'email', 'password', 'currency', 'language', 'theme'].map((field) => [field, form[field]]).filter(([, value]) => value !== undefined));
     const data = await signUp(payload);
     return createOperationResult({
       action: DomainAction.register_user,
@@ -85,7 +87,7 @@ export async function executeLoginUser(form, signIn, messages) {
   }
 
   try {
-    const result = await signIn(form);
+    const result = await signIn({ ...form, rememberMe: Boolean(form.rememberMe) });
 
     if (result?.error) {
       const deleted = result.error === 'User Deleted';

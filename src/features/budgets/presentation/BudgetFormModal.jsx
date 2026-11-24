@@ -9,6 +9,7 @@ import { Field } from '../../../shared/presentation/Field.jsx';
 import { Modal } from '../../../shared/presentation/Modal.jsx';
 import { SelectMonth } from '../../../shared/presentation/SelectMonth.jsx';
 import { SelectExpenseTypes } from '../../../shared/presentation/SelectExpenseTypes.jsx';
+import { formatCurrency } from '../../../shared/i18n/currency.js';
 import {
   BUDGET_MONTHS,
   BUDGET_STEPS,
@@ -19,7 +20,6 @@ import {
   validateBudgetStep,
 } from '../domain/budgetActions.js';
 
-const currency = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
 
 export function BudgetFormModal({ onClose, onSubmit, expenseTypes = [] }) {
   const { t } = useI18n();
@@ -100,7 +100,7 @@ export function BudgetFormModal({ onClose, onSubmit, expenseTypes = [] }) {
 
     setStatus(OperationStatus.loading);
     setMessage(t('budget.savingBudget'));
-    const result = await executeCreateBudget({ basics, expenses, tags }, onSubmit, messages, (value) => currency.format(value));
+    const result = await executeCreateBudget({ basics, expenses, tags }, onSubmit, messages, formatCurrency);
     setStatus(result.status);
     setMessage(result.message);
 
@@ -314,7 +314,7 @@ function Confirmation({ basics, expenses, tags, available, t }) {
         </div>
         <div>
           <dt>{t('budget.salary')}</dt>
-          <dd>{currency.format(Number(basics.salary || 0))}</dd>
+          <dd>{formatCurrency(Number(basics.salary || 0))}</dd>
         </div>
         <div>
           <dt>{t('budget.fixedExpenses')}</dt>
@@ -326,7 +326,7 @@ function Confirmation({ basics, expenses, tags, available, t }) {
         </div>
         <div>
           <dt>{t('budget.available')}</dt>
-          <dd>{currency.format(Number(available || 0))}</dd>
+          <dd>{formatCurrency(Number(available || 0))}</dd>
         </div>
       </dl>
     </section>

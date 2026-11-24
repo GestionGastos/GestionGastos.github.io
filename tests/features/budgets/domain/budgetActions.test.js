@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { OperationStatus } from '../../../shared/domain/operation.js';
-import { buildBudgetPayload, executeCreateBudget, previewBudgetSummary, validateBudgetStep } from './budgetActions.js';
+import { OperationStatus } from '../../../../src/shared/domain/operation.js';
+import { buildBudgetPayload, executeCreateBudget, previewBudgetSummary, validateBudgetStep } from '../../../../src/features/budgets/domain/budgetActions.js';
 
 const messages = {
   requiredBasics: 'basics',

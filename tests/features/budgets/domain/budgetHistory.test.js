@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { sortBudgetHistory } from './budgetHistory.js';
+import { sortBudgetHistory } from '../../../../src/features/budgets/domain/budgetHistory.js';
 
 describe('sortBudgetHistory', () => {
   it('orders budgets chronologically so the current month appears last', () => {

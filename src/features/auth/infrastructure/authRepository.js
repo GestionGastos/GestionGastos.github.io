@@ -1,4 +1,4 @@
-import { httpClient } from '../../../shared/infrastructure/httpClient.js';
+import { authHeaders, httpClient } from '../../../shared/infrastructure/httpClient.js';
 import { buildSession } from '../domain/authSession.js';
 
 export async function login(credentials) {
@@ -26,4 +26,20 @@ export async function logout(token) {
     method: 'POST',
     body: JSON.stringify({ token }),
   });
+}
+
+export function updatePassword(token, currentPassword, newPassword) {
+  return httpClient('/users/update_password', {
+    method: 'PUT',
+    headers: authHeaders(token),
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+}
+
+export function deleteAccount(token) {
+  return httpClient('/users/delete', { method: 'DELETE', headers: authHeaders(token) });
+}
+
+export function updateProfile(token, profile) {
+  return httpClient('/users/update_user', { method: 'PUT', headers: authHeaders(token), body: JSON.stringify(profile) });
 }

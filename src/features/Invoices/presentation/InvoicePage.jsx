@@ -19,8 +19,9 @@ import {
 import { useMemo, useState } from 'react';
 import { useI18n } from '../../../shared/i18n/I18nProvider.jsx';
 import { PublicLayout } from '../../../shared/presentation/PublicLayout.jsx';
+import { formatCurrency } from '../../../shared/i18n/currency.js';
 
-const invoiceRecords = [
+const sampleInvoiceRecords = [
   { id: 'FAC-2024-0128', date: '24 Nov, 2024', supplier: 'AWS Cloud Services', detail: 'Servicios de infraestructura cloud', category: 'Infraestructura', due: '30 Nov, 2024', amount: '$1,850.00', status: 'processed' },
   { id: 'FAC-2024-0127', date: '22 Nov, 2024', supplier: 'Adobe Creative Cloud', detail: 'Licencia corporativa anual', category: 'Licencias', due: '28 Nov, 2024', amount: '$890.00', status: 'processed' },
   { id: 'FAC-2024-0126', date: '20 Nov, 2024', supplier: 'Consultoría Tech Corp', detail: 'Auditoría de Sistemas S.A.', category: 'Servicios', due: '30 Nov, 2024', amount: '$4,500.00', status: 'pending' },
@@ -41,6 +42,10 @@ export function InvoicePage() {
   const { t } = useI18n();
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
+  const [manualInvoices, setManualInvoices] = useState(readManualInvoices);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [notice, setNotice] = useState('');
+  const invoiceRecords = [...manualInvoices, ...sampleInvoiceRecords];
 
   const visibleInvoices = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
@@ -50,7 +55,7 @@ export function InvoicePage() {
       const matchesSearch = !normalizedSearch || Object.values(invoice).join(' ').toLowerCase().includes(normalizedSearch);
       return matchesStatus && matchesSearch;
     });
-  }, [filter, search]);
+  }, [filter, search, manualInvoices]);
 
   return (
     <PublicLayout>
@@ -58,7 +63,8 @@ export function InvoicePage() {
         <div className="invoice-page__ambient invoice-page__ambient--green" />
         <div className="invoice-page__ambient invoice-page__ambient--orange" />
         <div className="invoice-container">
-          <InvoiceHeader t={t} />
+          <InvoiceHeader t={t} onCreate={() => setIsCreateOpen(true)} />
+          {notice ? <p className="invoice-manual-notice" role="status">{notice}</p> : null}
           <InvoiceMetrics t={t} />
           <SyncBanner t={t} />
           <section className="invoice-table-card">
@@ -82,12 +88,13 @@ export function InvoicePage() {
           </section>
           <InvoiceInfoCards t={t} />
         </div>
+        {isCreateOpen ? <ManualInvoiceModal t={t} onClose={() => setIsCreateOpen(false)} onSave={(invoice) => { const next = [invoice, ...manualInvoices]; setManualInvoices(next); localStorage.setItem('lifesync.manualInvoices', JSON.stringify(next)); setNotice(t('invoice.manual.saved')); setIsCreateOpen(false); }} /> : null}
       </main>
     </PublicLayout>
   );
 }
 
-function InvoiceHeader({ t }) {
+function InvoiceHeader({ t, onCreate }) {
   return (
     <section className="invoice-heading">
       <div>
@@ -101,13 +108,43 @@ function InvoiceHeader({ t }) {
           {t('invoice.export')}
           <small>CSV/PDF</small>
         </button>
-        <button className="invoice-primary-button" type="button">
+        <button className="invoice-primary-button" type="button" onClick={onCreate}>
           <PlusCircle size={20} />
           {t('invoice.new')}
         </button>
       </div>
     </section>
   );
+}
+
+function ManualInvoiceModal({ t, onClose, onSave }) {
+  const { locale } = useI18n();
+  const [quantity, setQuantity] = useState('1');
+  const [unitValue, setUnitValue] = useState('');
+  const [vat, setVat] = useState('19');
+  const [description, setDescription] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const submit = (event) => {
+    event.preventDefault();
+    const values = Object.fromEntries(new FormData(event.currentTarget));
+    const subtotal = Number(values.quantity) * Number(values.unitValue);
+    const tax = subtotal * Number(values.vat) / 100;
+    const issued = new Date(`${values.issueDate}T12:00:00`);
+    const currencyLocale = locale === 'en' ? 'en-US' : 'es-CO';
+    const amount = subtotal + tax;
+    setSubmitting(true);
+    onSave({
+      id: values.number.trim(), date: issued.toLocaleDateString(currencyLocale), supplier: values.seller.trim(), detail: values.buyer.trim(), category: description.trim(), due: values.dueDate || '—',
+      amount: formatCurrency(amount, undefined, locale), status: 'pending', sellerId: values.sellerId.trim(), buyerId: values.buyerId.trim(), quantity: Number(values.quantity), unitValue: Number(values.unitValue), vat: Number(values.vat), subtotal, tax, createdManually: true,
+    });
+  };
+
+  return <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !submitting) onClose(); }}><section className="modal-sheet invoice-manual-modal" role="dialog" aria-modal="true" aria-labelledby="manual-invoice-title"><header className="modal-heading"><h2 id="manual-invoice-title">{t('invoice.manual.title')}</h2><button type="button" aria-label={t('invoice.manual.cancel')} onClick={onClose}>×</button></header><form className="form-stack invoice-manual-form" onSubmit={submit}><p className="invoice-manual-warning"><ShieldCheck size={16} />{t('invoice.manual.legalNotice')}</p><div className="invoice-manual-grid"><label>{t('invoice.manual.number')}<input name="number" required maxLength="30" /></label><label>{t('invoice.manual.issueDate')}<input name="issueDate" type="date" required defaultValue={new Date().toISOString().slice(0,10)} /></label><label>{t('invoice.manual.seller')}<input name="seller" required /></label><label>{t('invoice.manual.sellerId')}<input name="sellerId" required /></label><label>{t('invoice.manual.buyer')}<input name="buyer" required /></label><label>{t('invoice.manual.buyerId')}<input name="buyerId" required /></label><label className="invoice-manual-grid__wide">{t('invoice.manual.description')}<input name="description" required value={description} onChange={(event) => setDescription(event.target.value)} /></label><label>{t('invoice.manual.quantity')}<input name="quantity" type="number" min="0.01" step="0.01" required value={quantity} onChange={(event) => setQuantity(event.target.value)} /></label><label>{t('invoice.manual.unitValue')}<input name="unitValue" type="number" min="0" step="1" required value={unitValue} onChange={(event) => setUnitValue(event.target.value)} /></label><label>{t('invoice.manual.vat')}<input name="vat" type="number" min="0" max="100" step="0.1" value={vat} onChange={(event) => setVat(event.target.value)} /></label><label>{t('invoice.manual.dueDate')}<input name="dueDate" type="date" /></label></div><div className="invoice-manual-total"><span>{t('invoice.table.amount')}</span><strong>{formatCurrency(Number(quantity || 0) * Number(unitValue || 0) * (1 + Number(vat || 0) / 100))}</strong></div><div className="modal-actions"><button type="button" className="invoice-secondary-button" onClick={onClose}>{t('invoice.manual.cancel')}</button><button type="submit" className="invoice-primary-button" disabled={submitting}>{t('invoice.manual.save')}</button></div></form></section></div>;
+}
+
+function readManualInvoices() {
+  try { return JSON.parse(localStorage.getItem('lifesync.manualInvoices')) ?? []; } catch { return []; }
 }
 
 function InvoiceMetrics({ t }) {

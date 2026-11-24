@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import { DomainErrorType } from '../../../shared/domain/actions.js';
-import { OperationStatus } from '../../../shared/domain/operation.js';
-import { executeLoginUser, executeRegisterUser, validateRegisterForm } from './authActions.js';
+import { DomainErrorType } from '../../../../src/shared/domain/actions.js';
+import { OperationStatus } from '../../../../src/shared/domain/operation.js';
+import { executeLoginUser, executeRegisterUser, validateRegisterForm } from '../../../../src/features/auth/domain/authActions.js';
 
 const messages = {
   fieldRequired: 'required',
@@ -13,6 +13,7 @@ const messages = {
   loginSuccess: 'logged',
   invalidLogin: 'invalid',
   deletedUser: 'deleted',
+  termsRequired: 'terms required',
 };
 
 describe('authActions', () => {
@@ -31,7 +32,7 @@ describe('authActions', () => {
   it('maps a 409 to EMAIL_EXISTS', async () => {
     const signUp = vi.fn().mockRejectedValue({ status: 409 });
     const result = await executeRegisterUser({
-      name: 'Ada', lastname: 'Lovelace', username: 'ada', email: 'ada@example.com', password: 'secret', confirmPassword: 'secret',
+      name: 'Ada', lastname: 'Lovelace', username: 'ada', email: 'ada@example.com', password: 'secret', confirmPassword: 'secret', termsAccepted: true,
     }, signUp, messages);
 
     expect(result.error.type).toBe(DomainErrorType.EMAIL_EXISTS);
@@ -41,7 +42,7 @@ describe('authActions', () => {
   it('maps a missing status to NETWORK', async () => {
     const signUp = vi.fn().mockRejectedValue(new Error('offline'));
     const result = await executeRegisterUser({
-      name: 'Ada', lastname: 'Lovelace', username: 'ada', email: 'ada@example.com', password: 'secret', confirmPassword: 'secret',
+      name: 'Ada', lastname: 'Lovelace', username: 'ada', email: 'ada@example.com', password: 'secret', confirmPassword: 'secret', termsAccepted: true,
     }, signUp, messages);
 
     expect(result.error.type).toBe(DomainErrorType.NETWORK);
@@ -57,6 +58,6 @@ describe('authActions', () => {
   });
 
   it('requires every register field', () => {
-    expect(Object.keys(validateRegisterForm({}, messages))).toHaveLength(6);
+    expect(Object.keys(validateRegisterForm({}, messages))).toHaveLength(7);
   });
 });

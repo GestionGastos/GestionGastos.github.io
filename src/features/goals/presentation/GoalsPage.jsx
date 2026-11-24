@@ -1,154 +1,115 @@
-import { ArrowLeft, CalendarDays, Check, Goal, Plus, PiggyBank, Plane, ShieldCheck, Target, Trash2 } from 'lucide-react';
+import { ArrowLeft, CalendarDays, Check, Goal, Plus, PiggyBank } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { PublicLayout } from '../../../shared/presentation/PublicLayout.jsx';
 import { Button } from '../../../shared/presentation/Button.jsx';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import * as goalRepository from '../infrastructure/goalRepository.js';
-import * as budgetRepository from '../../budgets/infrastructure/budgetRepository.js';
 import { useAuth } from '../../auth/presentation/useAuth.js';
 import { GoalFormModal } from './GoalFormModal.jsx';
 import { useI18n } from '../../../shared/i18n/I18nProvider.jsx';
 import { GoalCard } from './GoalCard.jsx';
-import { calculateGoalByBudget } from '../domain/goalCalculations.js';
-
-const goals=[{name:'Viaje a Europa',icon:Plane,current:3400000,target:8000000,date:'Dic 2025',tone:'purple'},{name:'Fondo de emergencia',icon:ShieldCheck,current:1800000,target:5000000,date:'Ago 2025',tone:'green'},{name:'Nueva laptop',icon:Target,current:2200000,target:3500000,date:'Sep 2025',tone:'orange'}];
-
-const money=new Intl.NumberFormat('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0});
+import { GoalContributionModal } from './GoalContributionModal.jsx';
+import * as budgetRepository from '../../budgets/infrastructure/budgetRepository.js';
+import { formatCurrency } from '../../../shared/i18n/currency.js';
 
 export const GoalsPage = () => {
-    const { userId } = useParams();
-    const [ goals, setGoals] = useState([])
-    const [ budget, setBudget ] = useState({});
-    const [ status, setStatus ] = useState({ loading: false, error: '' });
-    const { token, user } = useAuth();
-    const [ isModalOpen, setIsModalOpen ] = useState(false); 
-    const { t } = useI18n();
-    const [ savings, setSavings ] = useState({ target: 0, current: 0});
-    const [ successed, setSuccessed ] = useState(0);
-    const [ inProgress, setInProgress ] = useState(0); 
+  const { userId } = useParams();
+  const [goals, setGoals] = useState([]);
+  const [status, setStatus] = useState({ loading: true, error: '' });
+  const { token, user } = useAuth();
+  const [editingGoal, setEditingGoal] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [filter, setFilter] = useState('all');
+  const [saving, setSaving] = useState(false);
+  const [contributingGoal, setContributingGoal] = useState(null);
+  const { t } = useI18n();
+  const effectiveUserId = userId === 'me' ? user?.id : userId;
 
-    const effectiveUserId = userId === 'me' ? user?.id : userId;
-
-    const loadGoals = async () => {
-        setStatus({ loading: true, error: '' });
-
-        try {
-            const [ goalsResponse, budgetResponse ] = await Promise.all([
-                goalRepository.getGoals(effectiveUserId, token),
-                budgetRepository.getCurrentBudgetByUser(effectiveUserId, token)
-            ]);
-
-            const data = goalsResponse.goals;
-
-            const saving = data.filter((goal) => goal.type === 'saving');
-            const completed = data.filter((goal) => goal.status === 'completed');
-            const progress = data.filter((goal) => goal.status === 'in_progress');
-
-
-            savings.length === 0 && setSavings({current: saving[0].current, target: saving[0].value});
-            setSuccessed(completed.length);
-            setInProgress(progress.length);
-
-            setGoals(data);
-            setBudget(budgetResponse.budget);
-            setStatus({ loading: false, error: '' });
-        } catch {
-            setStatus({ loading: false, error: 'Error al obtener las metas' });
-        }
+  const loadGoals = useCallback(async () => {
+    setStatus({ loading: true, error: '' });
+    try {
+      const goalsResponse = await goalRepository.getGoals(effectiveUserId, token);
+      const nextGoals = (goalsResponse?.goals ?? []).filter((goal) => goal.status !== 'deleted').map((goal) => {
+        const expired = goal.type !== 'budget' && goal.objective_date && new Date(goal.objective_date).setHours(23,59,59,999) <= Date.now();
+        return expired ? { ...goal, status: 'completed' } : goal;
+      });
+      setGoals(nextGoals);
+      setStatus({ loading: false, error: '' });
+    } catch {
+      setStatus({ loading: false, error: t('goal.loadError') });
     }
+  }, [effectiveUserId, token, t]);
 
-    useEffect(() => {
-        loadGoals();
-    }, [effectiveUserId, token]);
+  useEffect(() => { loadGoals(); }, [loadGoals]);
 
-    const submitGoal = async (goal) => {
-        try {
-            const newGoal = await goalRepository.createGoal(token, goal);
+  const activeGoals = useMemo(() => goals.filter((goal) => ['pending', 'in_progress'].includes(goal.status)), [goals]);
+  const completed = goals.filter((goal) => goal.status === 'completed');
+  const savingGoals = goals.filter((goal) => goal.type === 'saving');
+  const savings = savingGoals.reduce((totals, goal) => ({ current: totals.current + (Number(goal.current) || 0), target: totals.target + (Number(goal.value) || 0) }), { current: 0, target: 0 });
+  const visibleGoals = goals.filter((goal) => filter === 'all' || goal.status === filter);
 
-            if (budget.length > 0) {
-                calculateGoalByBudget(newGoal.goal, budget, token);
-            }
-            setIsModalOpen(false);
-            await loadGoals();
-        } catch(error) {
-            console.error("error al tratar de crear la meta");
-        }
-    }
+  const submitGoal = async (goal) => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      if (goal._id) await goalRepository.updateGoal(token, goal);
+      else await goalRepository.createGoal(token, goal);
+      setIsModalOpen(false);
+      setEditingGoal(null);
+      await loadGoals();
+    } catch {
+      setStatus({ loading: false, error: t('goal.saveError') });
+    } finally { setSaving(false); }
+  };
 
-    return (
-        <PublicLayout>
-            <main className="goals-page">
-                <div className="goals-heading">
-                    <div>
-                        <Link className="back-link" to={`/app/users/${userId}/dashboard`}><ArrowLeft size={16}/> Dashboard</Link>
-                        <h1>{ t('goal.title')}</h1>
-                        <p>{ t('goal.subtitle')}</p>
-                    </div>
-                    <Button type="button" onClick={() => setIsModalOpen(true)}><Plus size={18}/> Nueva meta</Button>
-                </div>
-                <section className="goals-summary">
-                    <article>
-                        <span><Goal size={18}/> Metas activas</span>
-                        <strong>{ goals.length }</strong>
-                        <small>{ inProgress } en progreso</small>
-                    </article>
-                    <article>
-                        <span><PiggyBank size={18}/> Ahorrado</span>
-                        <strong>{money.format(savings.current)}</strong>
-                        <small>de {money.format(savings.target)}</small>
-                    </article>
-                    <article>
-                        <span><Check size={18}/> Completadas</span>
-                        <strong>{successed}</strong>
-                        <small>Este año</small>
-                    </article>
-                </section>
-                <div className="goals-toolbar">
-                    <h2>Tus objetivos</h2>
-                    <select>
-                        <option>Todas las metas</option>
-                        <option>En progreso</option>
-                        <option>Completadas</option>
-                    </select>
-                </div>
-                <section className="goals-grid">
-                    {goals.map(({name,value,current,objective_date})=>{
-                        const percent=Math.round(current/value*100);
-                        return (
-                            <GoalCard key={name} name={name} target={value} date={objective_date} current={current} percent={percent} />
-                            /*<article className="goal-card" key={name}>
-                                <div className={`goal-icon goal-icon--${tone}`}>
-                                    <Icon size={22}/></div><div className="goal-card__top">
-                                    <div>
-                                        <h3>{name}</h3>
-                                        <p>Fecha objetivo: {date}</p>
-                                    </div>
-                                    <button className="icon-button icon-button--neutral" aria-label={`Eliminar ${name}`}><Trash2 size={17}/></button>
-                                </div>
-                                <div className="goal-card__amount">
-                                    <strong>{money.format(current)}</strong>
-                                    <span>de {money.format(target)}</span>
-                                </div>
-                                <div className="progress progress--large">
-                                    <span style={{width:`${percent}%`}}/>
-                                </div>
-                                <div className="goal-card__footer">
-                                    <span>{percent}% completado</span>
-                                    <button className="goal-add"><Plus size={15}/> Añadir ahorro</button>
-                                </div>
-                            </article>*/
-                        )
-                    })}
-                </section>
-                <section className="goals-tip">
-                    <CalendarDays size={22}/>
-                    <div>
-                        <strong>Consejo de FinTrack</strong>
-                        <p>Divide tus metas grandes en aportes mensuales automáticos para hacerlas más fáciles de alcanzar.</p>
-                    </div>
-                </section>
-            </main>
-            { isModalOpen && <GoalFormModal onClose={ () => setIsModalOpen(false) } onSubmit={submitGoal} />}
-        </PublicLayout>
-    )
+  const removeGoal = async (goal) => {
+    if (!window.confirm(t('goal.deleteConfirm'))) return;
+    setSaving(true);
+    try {
+      await goalRepository.deleteGoal(token, goal);
+      setGoals((current) => current.filter((entry) => entry._id !== goal._id));
+      await loadGoals();
+    } catch {
+      setStatus({ loading: false, error: t('goal.deleteError') });
+    } finally { setSaving(false); }
+  };
+
+  const addContribution = async (amount) => {
+    if (!contributingGoal || saving) return;
+    setSaving(true);
+    try {
+      const budget = await readCurrentBudget(effectiveUserId, token);
+      await goalRepository.createGoalContribution(token, contributingGoal._id, { budgetId: budget._id, amount });
+      setContributingGoal(null);
+      await loadGoals();
+    } catch { setStatus({ loading: false, error: t('goal.contributionError') }); }
+    finally { setSaving(false); }
+  };
+
+  const openEdit = (goal) => { setEditingGoal(goal); setIsModalOpen(true); };
+  const openCreate = () => { setEditingGoal(null); setIsModalOpen(true); };
+
+  return (
+    <PublicLayout>
+      <main className="goals-page">
+        <div className="goals-heading"><div><Link className="back-link" to={`/app/users/${userId}/dashboard`}><ArrowLeft size={16} />{t('nav.dashboardClean')}</Link><h1>{t('goal.title')}</h1><p>{t('goal.subtitle')}</p></div><Button type="button" onClick={openCreate}><Plus size={18} />{t('goal.new')}</Button></div>
+        {status.error ? <p className="form-feedback form-feedback--error" role="alert">{status.error}</p> : null}
+        <section className="goals-summary"><article><span><Goal size={18} />{t('goal.active')}</span><strong>{activeGoals.length}</strong><small>{goals.filter((goal) => goal.status === 'in_progress').length} {t('goal.inProgress')}</small></article><article><span><PiggyBank size={18} />{t('goal.saved')}</span><strong>{formatCurrency(savings.current)}</strong><small>{t('goal.of')} {formatCurrency(savings.target)}</small></article><article><span><Check size={18} />{t('goal.completed')}</span><strong>{completed.length}</strong><small>{t('goal.thisYear')}</small></article></section>
+        <div className="goals-toolbar"><h2>{t('goal.objectives')}</h2><select value={filter} onChange={(event) => setFilter(event.target.value)} aria-label={t('goal.filter')}><option value="all">{t('goal.all')}</option><option value="in_progress">{t('goal.inProgress')}</option><option value="completed">{t('goal.completed')}</option></select></div>
+        {status.loading ? <p role="status">{t('goal.loading')}</p> : null}
+        {!status.loading && !visibleGoals.length ? <p className="suite-notice">{t('goal.empty')}</p> : null}
+        <section className="goals-grid">{visibleGoals.map((goal) => <GoalCard key={goal._id ?? goal.name} name={goal.name} target={goal.value} date={goal.type === 'budget' ? goal.month : goal.objective_date} current={goal.current} type={goal.type} percent={goal.value ? Math.round((Number(goal.current) || 0) / Number(goal.value) * 100) : 0} onEdit={() => openEdit(goal)} onDelete={() => removeGoal(goal)} onContribute={() => setContributingGoal(goal)} />)}</section>
+        <section className="goals-tip"><CalendarDays size={22} /><div><strong>{t('goal.tipTitle')}</strong><p>{t('goal.tipText')}</p></div></section>
+      </main>
+      {isModalOpen ? <GoalFormModal key={editingGoal?._id ?? 'new'} initialGoal={editingGoal} onClose={() => { if (!saving) { setIsModalOpen(false); setEditingGoal(null); } }} onSubmit={submitGoal} /> : null}
+      {contributingGoal ? <GoalContributionModal goal={contributingGoal} busy={saving} onClose={() => { if (!saving) setContributingGoal(null); }} onSave={addContribution} /> : null}
+    </PublicLayout>
+  );
+};
+
+async function readCurrentBudget(userId, token) {
+  const response = await budgetRepository.getCurrentBudgetByUser(userId, token);
+  const budget = Array.isArray(response?.budget) ? response.budget[0] : response?.budget;
+  if (!budget?._id) throw new Error('Current budget required');
+  return budget;
 }
