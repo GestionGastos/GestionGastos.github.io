@@ -65,6 +65,11 @@ export function AuthProvider({ children }) {
     }
 
     localStorage.setItem(SESSION_KEY, JSON.stringify(nextSession));
+    localStorage.setItem('currency', nextSession.user?.currency ?? 'COP');
+    localStorage.setItem('locale', (nextSession.user?.language ?? 'ES').toLowerCase());
+    localStorage.setItem('theme', (nextSession.user?.theme ?? 'Light').toLowerCase());
+    window.dispatchEvent(new Event('lifesync:locale-updated'));
+    window.dispatchEvent(new Event('lifesync:theme-updated'));
     setSession(nextSession);
     return nextSession;
   }, []);

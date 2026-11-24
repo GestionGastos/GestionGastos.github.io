@@ -1,6 +1,9 @@
+import { suiteEn, suiteEs } from './suiteTranslations.js';
+
 export const translations = {
   es: {
-    appName: 'FinTrack',
+    ...suiteEs,
+    appName: 'LifeSync',
     nav: {
       home: 'Inicio',
       features: 'Funciones',
@@ -14,9 +17,9 @@ export const translations = {
       logout: 'Salir',
     },
     sidebar: {
-      modules: 'Módulos integrados', suite: 'Suite', fintrack: 'FinTrack', dashboard: 'Dashboard', financeExpenses: 'Finanzas y gastos',
+      modules: 'Módulos de la suite', suite: 'Lifestyle Suite', fintrack: 'FinTrack', dashboard: 'Dashboard', financeExpenses: 'Finanzas y gastos',
       budgets: 'Presupuestos', budgetPlanning: 'Planeación mensual', invoices: 'Facturas', billing: 'Facturación y cobros',
-      goals: 'Metas', financialGoals: 'Objetivos financieros', personalSpace: 'Espacio personal', proPlan: 'Plan Pro',
+      goals: 'Metas', financialGoals: 'Objetivos financieros', personalSpace: 'Espacio personal', proPlan: 'Plan Pro', homesyncDetail: 'Hogar y compras', taskflow: 'TaskFlow', taskflowDetail: 'Gestor de tareas', receivables: 'Cuentas de Cobro', receivablesDetail: 'Facturación freelance', fitpulse: 'FitPulse', fitpulseDetail: 'Bienestar personal',
       support: 'Soporte', settings: 'Configuración', switchSpace: 'Cambiar espacio', openMenu: 'Abrir menú', closeMenu: 'Cerrar menú',
     },
     landing: {
@@ -78,6 +81,7 @@ export const translations = {
       transportation: 'Transporte',
       pharmacy: "Farmacia",
       cleaning_supplies: "Productos de Limpieza",
+      school_route: 'Ruta Escolar',
       additionalIncome: 'Ingreso adicional',
       cash: 'Efectivo disponible',
       available: 'Monto disponible',
@@ -97,6 +101,7 @@ export const translations = {
       add: 'Sumar',
       subtract: 'Restar',
       applyAdjustment: 'Aplicar ajuste', saving: 'Guardando...', autoSaved: 'Cambios guardados', noPendingChanges: 'Sin cambios pendientes',
+      chart: { empty: 'Aún no hay valores para mostrar.', total: 'Total asignado', legend: 'Distribución del presupuesto', description: 'Distribución de {total}', Disponible: 'Disponible', Ahorro: 'Ahorro', 'Gastos fijos': 'Gastos fijos', Adicionales: 'Adicionales' },
       editBudget: 'Editar presupuesto',
       updateBudget: 'Actualizar presupuesto',
       remove: 'Eliminar',
@@ -139,6 +144,7 @@ export const translations = {
       title: 'Bienvenido a FinTrack',
       subtitle: 'Toma las riendas de tu futuro financiero gracias a un seguimiento preciso y a análisis automatizados.',
       caption: 'Ten una vista clara de tu salud financiera y toma decisiones con confianza.',
+      cityAlt: 'Panorámica urbana al atardecer', overview: 'Resumen de presupuestos', income: 'Ingresos', expenses: 'Gastos', totalIncome: 'Ingresos totales', totalExpenses: 'Gastos totales', goals: 'Metas recientes', viewAll: 'Ver todas', of: 'de', emptyGoals: 'Aún no hay metas o presupuestos.', health: 'Salud financiera', onTrack: 'En buen camino', review: 'Revisar presupuesto', healthDescription: 'Indicador calculado a partir de tus ingresos y gastos registrados.', monthlySummary: 'RESUMEN FINANCIERO', remaining: 'Disponible estimado', recentTransactions: 'Transacciones recientes', emptyTransactions: 'Aún no hay transacciones.', viewInvoices: 'Ver facturas',
     },
     invoice: {
       eyebrow: 'Módulo Contable • Tiempo Real',
@@ -146,6 +152,8 @@ export const translations = {
       subtitle: 'Monitorea, concilia y gestiona el historial de facturación y transacciones electrónicas automatizadas.',
       export: 'Exportar Reporte',
       new: '+ Nueva Factura',
+      source: { manual: 'Registro manual', shopping_list: 'HomeSync · Compras', restaurant_plan: 'HomeSync · Salidas' },
+      manual: { title: 'Crear factura manual', legalNotice: 'Este registro es interno y no genera ni valida una factura electrónica ante la DIAN.', number: 'Número / consecutivo', issueDate: 'Fecha de expedición', seller: 'Nombre o razón social del vendedor', sellerId: 'NIT / identificación del vendedor', buyer: 'Nombre o razón social del adquirente', buyerId: 'NIT / identificación del adquirente', description: 'Descripción del bien o servicio', quantity: 'Cantidad', unitValue: 'Valor unitario (COP)', vat: 'IVA (%)', dueDate: 'Fecha de vencimiento (opcional)', save: 'Guardar registro', cancel: 'Cancelar', saved: 'Factura manual guardada en este dispositivo.' },
       search: 'Buscar transacciones, facturas...',
       empty: 'No encontramos facturas con esos criterios.',
       showing: 'Mostrando',
@@ -164,6 +172,7 @@ export const translations = {
     goal: {
       title: "Mis metas financieras",
       subtitle: 'Convierte tus planes en objetivos alcanzables.',
+      new: 'Nueva meta', active: 'Metas activas', inProgress: 'en progreso', saved: 'Ahorrado', of: 'de', completed: 'Completadas', thisYear: 'Este año', objectives: 'Tus objetivos', filter: 'Filtrar metas', all: 'Todas las metas', loading: 'Cargando metas…', empty: 'Aún no hay metas para mostrar.', loadError: 'No pudimos cargar las metas.', saveError: 'No pudimos guardar la meta.', deleteConfirm: '¿Eliminar esta meta? La acción no se puede deshacer.', deleteError: 'No pudimos eliminar la meta.', contribution: 'Aportar a la meta', currentAmount: 'Acumulado', amountToAdd: 'Monto que deseas aportar', contribute: 'Guardar aporte', contributionError: 'No pudimos guardar el aporte en la meta y el presupuesto actual.', tipTitle: 'Consejo de FinTrack', tipText: 'Divide tus metas grandes en aportes mensuales para hacerlas más fáciles de alcanzar.',
       saving: {
         description: "Crea una meta de ahorro, se recomiendas el 20% de tus ingresos"
       },
@@ -206,7 +215,8 @@ export const translations = {
     },
   },
   en: {
-    appName: 'FinTrack',
+    ...suiteEn,
+    appName: 'LifeSync',
     nav: {
       home: 'Home',
       features: 'Features',
@@ -220,9 +230,9 @@ export const translations = {
       logout: 'Log out',
     },
     sidebar: {
-      modules: 'Integrated modules', suite: 'Suite', fintrack: 'FinTrack', dashboard: 'Dashboard', financeExpenses: 'Finance and expenses',
+      modules: 'Suite modules', suite: 'Lifestyle Suite', fintrack: 'FinTrack', dashboard: 'Dashboard', financeExpenses: 'Finance and expenses',
       budgets: 'Budgets', budgetPlanning: 'Monthly planning', invoices: 'Invoices', billing: 'Billing and collections',
-      goals: 'Goals', financialGoals: 'Financial goals', personalSpace: 'Personal space', proPlan: 'Pro Plan',
+      goals: 'Goals', financialGoals: 'Financial goals', personalSpace: 'Personal space', proPlan: 'Pro Plan', homesyncDetail: 'Home and shopping', taskflow: 'TaskFlow', taskflowDetail: 'Task manager', receivables: 'Invoices', receivablesDetail: 'Freelance billing', fitpulse: 'FitPulse', fitpulseDetail: 'Personal wellbeing',
       support: 'Support', settings: 'Settings', switchSpace: 'Switch space', openMenu: 'Open menu', closeMenu: 'Close menu',
     },
     landing: {
@@ -284,6 +294,7 @@ export const translations = {
       transportation: 'Transportation',
       pharmacy: "Pharmacy",
       cleaning_supplies: "Cleaning Supplies",
+      school_route: 'School Route',
       additionalIncome: 'Additional income',
       cash: 'Available cash',
       available: 'Available amount',
@@ -303,6 +314,7 @@ export const translations = {
       add: 'Add',
       subtract: 'Subtract',
       applyAdjustment: 'Apply adjustment', saving: 'Saving...', autoSaved: 'Changes saved', noPendingChanges: 'No pending changes',
+      chart: { empty: 'There are no values to display yet.', total: 'Total allocated', legend: 'Budget breakdown', description: 'Breakdown of {total}', Disponible: 'Available', Ahorro: 'Savings', 'Gastos fijos': 'Fixed expenses', Adicionales: 'Additional expenses' },
       editBudget: 'Edit budget',
       updateBudget: 'Update budget',
       remove: 'Remove',
@@ -345,6 +357,7 @@ export const translations = {
       title: 'Welcome to FinTrack',
       subtitle: 'Take command of your financial future with precision tracking and automated insights.',
       caption: 'A clear view of your financial health to make confident decisions.',
+      cityAlt: 'City skyline at dusk', overview: 'Budget overview', income: 'Income', expenses: 'Expenses', totalIncome: 'Total income', totalExpenses: 'Total expenses', goals: 'Recent goals', viewAll: 'View all', of: 'of', emptyGoals: 'There are no goals or budgets yet.', health: 'Financial health', onTrack: 'On track', review: 'Review budget', healthDescription: 'Indicator calculated from your recorded income and expenses.', monthlySummary: 'FINANCIAL SUMMARY', remaining: 'Estimated available', recentTransactions: 'Recent transactions', emptyTransactions: 'There are no transactions yet.', viewInvoices: 'View invoices',
     },
     invoice: {
       eyebrow: 'Accounting Module • Real Time',
@@ -352,6 +365,8 @@ export const translations = {
       subtitle: 'Monitor, reconcile, and manage your billing history and automated electronic transactions.',
       export: 'Export Report',
       new: '+ New Invoice',
+      source: { manual: 'Manual record', shopping_list: 'HomeSync · Shopping', restaurant_plan: 'HomeSync · Outings' },
+      manual: { title: 'Create invoice manually', legalNotice: 'This is an internal record; it does not issue or validate an electronic invoice with DIAN.', number: 'Invoice number', issueDate: 'Issue date', seller: 'Seller name or legal name', sellerId: 'Seller tax ID / identification', buyer: 'Buyer name or legal name', buyerId: 'Buyer tax ID / identification', description: 'Goods or services description', quantity: 'Quantity', unitValue: 'Unit value (COP)', vat: 'VAT (%)', dueDate: 'Due date (optional)', save: 'Save record', cancel: 'Cancel', saved: 'Manual invoice saved on this device.' },
       search: 'Search transactions, invoices...',
       empty: 'No invoices match those criteria.',
       showing: 'Showing',
@@ -370,6 +385,7 @@ export const translations = {
     goal: {
       title: "My Financial Goals",
       subtitle: 'Turn your plans into achievable goals.',
+      new: 'New goal', active: 'Active goals', inProgress: 'in progress', saved: 'Saved', of: 'of', completed: 'Completed', thisYear: 'This year', objectives: 'Your goals', filter: 'Filter goals', all: 'All goals', loading: 'Loading goals…', empty: 'There are no goals to display yet.', loadError: 'We could not load goals.', saveError: 'We could not save the goal.', deleteConfirm: 'Delete this goal? This action cannot be undone.', deleteError: 'We could not delete the goal.', contribution: 'Contribute to goal', currentAmount: 'Saved so far', amountToAdd: 'Contribution amount', contribute: 'Save contribution', contributionError: 'Could not save the contribution to the goal and current budget.', tipTitle: 'FinTrack tip', tipText: 'Break large goals into monthly contributions to make them easier to reach.',
       saving: {
         description: "Set a savings goal; we recommend 20% of your income"
       },

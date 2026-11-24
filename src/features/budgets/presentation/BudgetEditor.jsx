@@ -6,8 +6,8 @@ import { applyBudgetDraftWithCash, createBudgetDraft } from '../domain/budgetDra
 import { calculateBudgetSummary } from '../domain/budgetCalculations.js';
 import { BudgetChart } from './BudgetChart.jsx';
 import { SelectExpenseTypes } from '../../../shared/presentation/SelectExpenseTypes.jsx';
+import { formatCurrency } from '../../../shared/i18n/currency.js';
 
-const currency = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
 
 export function BudgetEditor({ budget, onSave, expenseTypes }) {
   const { t } = useI18n();
@@ -126,7 +126,21 @@ export function BudgetEditor({ budget, onSave, expenseTypes }) {
             <div className="two-column">
               <label>
                 {t('budget.savings')}
-                <input data-testid="budget-editor-savings" type="number" value={draft.basics.save} onChange={(event) => updateDraft(['basics', 'save'], event.target.value)} />
+                <IncrementAmount
+                  value={draft.basics.save}
+                  label={t('budget.savings')}
+                  onChange={(value) => setDraft((current) => {
+                    const addedSavings = Math.max(0, Number(value) - Number(current.basics.save || 0));
+                    return {
+                      ...current,
+                      basics: {
+                        ...current.basics,
+                        save: value,
+                        cash: String(Math.max(0, Number(current.basics.cash || 0) - addedSavings)),
+                      },
+                    };
+                  })}
+                />
               </label>
               <label>
                 {t('budget.additionalIncome')}
@@ -140,11 +154,10 @@ export function BudgetEditor({ budget, onSave, expenseTypes }) {
             </div>
             <label>
               Efectivo
-              <input
-                type="number" 
-                data-testid="budget-editor-cash"
+              <IncrementAmount
                 value={draft.basics.cash}
-                onChange={(event) => updateDraft(['basics', 'cash'], event.target.value)}
+                label="Efectivo"
+                onChange={(value) => updateDraft(['basics', 'cash'], value)}
               />
             </label>
           </div>
@@ -317,10 +330,11 @@ function IncrementAmount({ value, onChange, label }) {
         className={`amount-trigger ${hasValue ? '' : 'amount-trigger--empty'}`.trim()}
         type="button"
         aria-expanded={isOpen}
-        aria-label={`${label}: ${hasValue ? currency.format(currentValue) : t('budget.addAmount')}`}
+        aria-label={`${label}: ${hasValue ? formatCurrency(currentValue) : t('budget.addAmount')}`}
+        data-testid={label === 'Efectivo' ? 'budget-editor-cash' : label === t('budget.savings') ? 'budget-editor-savings' : undefined}
         onClick={() => setIsOpen((open) => !open)}
       >
-        {hasValue ? currency.format(currentValue) : t('budget.addAmount')}
+        {hasValue ? formatCurrency(currentValue) : t('budget.addAmount')}
         <Plus size={16} />
       </button>
       {isOpen ? (
@@ -373,7 +387,7 @@ function Metric({ label, value, highlight = false }) {
   return (
     <article className={`metric ${highlight ? 'metric--highlight' : ''}`}>
       <span>{label}</span>
-      <strong>{currency.format(Number(value ?? 0))}</strong>
+      <strong>{formatCurrency(Number(value ?? 0))}</strong>
     </article>
   );
 }

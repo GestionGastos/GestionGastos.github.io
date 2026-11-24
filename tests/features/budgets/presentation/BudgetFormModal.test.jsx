@@ -1,13 +1,13 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import { installApiMock } from '../../../test/mockApi.js';
-import { renderApp } from '../../../test/renderApp.jsx';
+import { installApiMock } from '../../../helpers/mockApi.js';
+import { renderApp } from '../../../helpers/renderApp.jsx';
 
 async function signIn(user) {
   installApiMock({ users: [{ email: 'ada@example.com', password: 'secret12' }] });
   renderApp('/login');
-  await user.type(screen.getByRole('textbox', { name: 'E-mail', exact: true }), 'ada@example.com');
+  await user.type(screen.getByRole('textbox', { name: 'Correo electrónico', exact: true }), 'ada@example.com');
   await user.type(screen.getByLabelText('Contraseña', { exact: true }), 'secret12');
   await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
   expect(await screen.findByRole('heading', { name: 'Dashboard financiero' })).toBeInTheDocument();
@@ -64,7 +64,7 @@ describe('BudgetFormModal', () => {
       fail: { saveBudget: true },
     });
     renderApp('/login');
-    await user.type(screen.getByRole('textbox', { name: 'E-mail', exact: true }), 'ada@example.com');
+    await user.type(screen.getByRole('textbox', { name: 'Correo electrónico', exact: true }), 'ada@example.com');
     await user.type(screen.getByLabelText('Contraseña', { exact: true }), 'secret12');
     await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
     await user.click(await screen.findByRole('button', { name: 'Nuevo presupuesto' }));
@@ -87,7 +87,7 @@ describe('BudgetFormModal', () => {
     const user = userEvent.setup();
     const api = installApiMock({ users: [{ email: 'ada@example.com', password: 'secret12' }], delays: { saveBudget: 100 } });
     renderApp('/login');
-    await user.type(screen.getByRole('textbox', { name: 'E-mail', exact: true }), 'ada@example.com');
+    await user.type(screen.getByRole('textbox', { name: 'Correo electrónico', exact: true }), 'ada@example.com');
     await user.type(screen.getByTestId('login-password'), 'secret12');
     await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
     await user.click(await screen.findByRole('button', { name: 'Nuevo presupuesto' }));

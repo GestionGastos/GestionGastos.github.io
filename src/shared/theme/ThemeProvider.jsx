@@ -6,8 +6,11 @@ export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') ?? 'light');
 
   useEffect(() => {
+    const syncTheme = () => setTheme(localStorage.getItem('theme') ?? 'light');
+    window.addEventListener('lifesync:theme-updated', syncTheme);
     document.documentElement.dataset.theme = theme;
     localStorage.setItem('theme', theme);
+    return () => window.removeEventListener('lifesync:theme-updated', syncTheme);
   }, [theme]);
 
   const value = useMemo(() => ({ theme, setTheme, toggleTheme: () => setTheme((current) => (current === 'light' ? 'dark' : 'light')) }), [theme]);

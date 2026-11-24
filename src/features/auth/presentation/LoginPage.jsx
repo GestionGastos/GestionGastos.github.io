@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ArrowRight } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { DomainAction } from '../../../shared/domain/actions.js';
 import { OperationStatus } from '../../../shared/domain/operation.js';
@@ -21,7 +22,8 @@ export function LoginPage() {
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [form, setForm] = useState({ email: '', password: '' });
+  const [form, setForm] = useState({ email: '', password: '', rememberMe: false });
+  const [rememberMe, setRememberMe] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
   const [status, setStatus] = useState(location.state?.message ? OperationStatus.success : OperationStatus.idle);
   const [message, setMessage] = useState(location.state?.message ?? '');
@@ -32,6 +34,7 @@ export function LoginPage() {
     invalidLogin: t('auth.invalidLogin'),
     deletedUser: t('auth.deletedUser'),
     networkError: t('auth.networkError'),
+    authUnavailable: t('authSuite.authUnavailable'),
   };
   const busy = status === OperationStatus.loading || status === OperationStatus.success;
 
@@ -73,23 +76,24 @@ export function LoginPage() {
     .map(([field, id]) => ({ id, message: fieldErrors[field], field }));
 
   return (
-    <AuthFormLayout title={t('auth.loginTitle')} footer={<p className="form-footer"><Link to="/registro">{t('auth.goRegister')}</Link></p>}>
+    <AuthFormLayout title={t('auth.loginTitle')} footer={<p className="suite-auth__account-prompt">{t('authSuite.noAccount')} <Link to="/registro">{t('authSuite.registerFree')}</Link></p>}>
       <form className="form-stack" onSubmit={submit} noValidate aria-busy={status === OperationStatus.loading} data-form={DomainAction.login_user}>
         <ErrorSummary id="login-error-summary" title={t('auth.errorSummary')} items={errorItems} />
         <FormFeedback id="login-feedback" status={status} message={message} />
-        <Field id="login-email" label={t('auth.email')} error={fieldErrors.email} required>
-          <input name="email" type="email" autoComplete="username" value={form.email} onChange={updateField('email')} placeholder="email@ejemplo.com" aria-label={t('auth.email')} data-testid="login-email" />
+        <Field id="login-email" label={t('authSuite.email')} error={fieldErrors.email} required>
+          <input name="email" type="email" autoComplete="username" value={form.email} onChange={updateField('email')} placeholder="nombre@ejemplo.com" aria-label={t('authSuite.email')} data-testid="login-email" />
         </Field>
         <Field id="login-password" label={t('auth.password')} error={fieldErrors.password} required>
           <input name="password" type="password" autoComplete="current-password" value={form.password} onChange={updateField('password')} aria-label={t('auth.password')} data-testid="login-password" />
         </Field>
+        <div className="suite-auth__remember-row"><label><input type="checkbox" checked={rememberMe} onChange={(event) => { setRememberMe(event.target.checked); setForm((current) => ({ ...current, rememberMe: event.target.checked })); }} />{t('authSuite.remember')}</label><Link to="/forgot-password">{t('authSuite.forgot')}</Link></div>
         <Button
           type="submit"
           disabled={busy}
           aria-busy={status === OperationStatus.loading}
           data-action={DomainAction.login_user}
         >
-          {status === OperationStatus.loading ? t('auth.signingIn') : status === OperationStatus.error ? t('auth.retry') : t('auth.submitLogin')}
+          {status === OperationStatus.loading ? t('auth.signingIn') : status === OperationStatus.error ? t('auth.retry') : <>{t('auth.submitLogin')} <ArrowRight size={17} /></>}
         </Button>
       </form>
     </AuthFormLayout>

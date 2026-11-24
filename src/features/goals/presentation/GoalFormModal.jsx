@@ -8,12 +8,13 @@ import { SelectMonth } from "../../../shared/presentation/SelectMonth";
 
 const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
-export const GoalFormModal = ({ onClose, onSubmit }) => {
+export const GoalFormModal = ({ onClose, onSubmit, initialGoal = null }) => {
     const currentDate = getCurrentDate();
     const { t } = useI18n();
-    const [step, setStep] = useState(0);
+    const [step, setStep] = useState(initialGoal ? 1 : 0);
     const [message, setMessage] = useState("");
-    const [ goal, setGoal ] = useState({ name: "", type: "", subtype: "", value: "", current: 0, objective_date: "", month: "", status: "pending", created_at: currentDate });
+    const [isSaving, setIsSaving] = useState(false);
+    const [ goal, setGoal ] = useState(() => initialGoal ? { ...initialGoal, value: String(initialGoal.value ?? ''), current: Number(initialGoal.current) || 0, objective_date: initialGoal.objective_date ? new Date(initialGoal.objective_date).toISOString().slice(0, 10) : '', month: initialGoal.month ?? '' } : { name: "", type: "", subtype: "", value: "", current: 0, objective_date: "", month: "", status: "pending", created_at: currentDate });
     const [ goalError, setGoalError ] = useState({ name: "", type: "", subtype: "", value: "" })
 
     const steps = useMemo(() => ['Tipo Meta', 'Valores', 'Confirmar']);
@@ -65,10 +66,13 @@ export const GoalFormModal = ({ onClose, onSubmit }) => {
                 valid = false;
             }
 
-            if (goal.value === '') {
+            if (goal.value === '' || !Number.isFinite(Number(goal.value)) || Number(goal.value) < 0) {
                 setGoalError({ ...goalError, value: "Debe asignar un valor"});
                 valid = false;
             }
+
+            if (goal.type === 'budget' && !goal.month) { setGoalError((current) => ({ ...current, month: 'Debe seleccionar el mes' })); valid = false; }
+            if (goal.type !== 'budget' && !goal.objective_date) { setGoalError((current) => ({ ...current, objective_date: 'Debe indicar una fecha objetivo' })); valid = false; }
 
             if (!valid) {
                 return;
@@ -79,14 +83,17 @@ export const GoalFormModal = ({ onClose, onSubmit }) => {
     }
 
     const save = async () => {
-        await onSubmit(goal);
+        if (isSaving) return;
+        setIsSaving(true);
+        try { await onSubmit({ ...goal, current: Number(goal.current) || 0, value: Number(goal.value), status: Number(goal.current) >= Number(goal.value) && Number(goal.value) > 0 ? 'completed' : 'pending' }); }
+        finally { setIsSaving(false); }
     }
 
     return (
         <Modal>
             <div className="modal-heading">
                 <div>
-                    <p className="eyebrow">Crear Meta</p>
+                    <p className="eyebrow">{initialGoal ? 'Editar meta' : 'Crear Meta'}</p>
                     <h2>{steps[step]}</h2>
                 </div>
                 <Button type="button" variant="ghost" onClick={onClose} aria-label={t('budget.cancel')}>
@@ -129,7 +136,7 @@ export const GoalFormModal = ({ onClose, onSubmit }) => {
                         </>
                     }
                     { step === 1 && <SecondForm goal={goal} setGoal={setGoal} goalError={goalError} /> }
-                    { step === 2 && <GoalCard name={goal.name} target={goal.value} date={goal.objective_date} /> }
+                    { step === 2 && <GoalCard name={goal.name} target={goal.value} current={Number(goal.current) || 0} date={goal.objective_date} /> }
                 </div>
                 <div className="modal-actions">
                     <Button type="button" variant="secondary" className="form-cancel-button" onClick={onClose}>
@@ -140,7 +147,7 @@ export const GoalFormModal = ({ onClose, onSubmit }) => {
                             {steps[step + 1]}
                         </Button>
                     ) : (
-                        <Button type="button" onClick={save}>
+                        <Button type="button" disabled={isSaving} onClick={save}>
                             Guardar
                         </Button>
                     )}
@@ -166,14 +173,7 @@ const SecondForm = ({ goal, setGoal, goalError }) => {
                     <small>{ goalError.value }</small>
                 </label>
             </div>
-            <label>
-                Fecha Objectivo
-                <input type="date" value={goal.objective_date} onChange={(e) => setGoal({ ...goal, objective_date: e.target.value })} />
-            </label>
-            <label>
-                Mes
-                <SelectMonth setValue={setGoal} value={goal.month} />
-            </label>
+            {goal.type === 'budget' ? <label>Mes<input type="month" value={goal.month ? `${goal.objective_date?.slice(0,4) || new Date().getFullYear()}-${String(monthNames.indexOf(goal.month) + 1).padStart(2,'0')}` : ''} onChange={(event) => { const [year, month] = event.target.value.split('-'); setGoal({ ...goal, month: monthNames[Number(month) - 1], objective_date: `${year}-${month}-01` }); }} required /><small>{goalError.month}</small></label> : <label>Fecha objetivo<input type="date" value={goal.objective_date} onChange={(e) => setGoal({ ...goal, objective_date: e.target.value })} required /><small>{goalError.objective_date}</small></label>}
         </>
     );
 }
@@ -185,7 +185,7 @@ const getCurrentDate = () => {
     if (month < 10) {
         month = `0${month}`;
     }
-    let day = currentDate.getDay();
+    let day = currentDate.getDate();
     if (day < 10) {
         day = `0${day}`;
     }

@@ -9,6 +9,9 @@ export function buildSession(payload) {
     username: userFromPayload.username ?? decodedUser?.username ?? '',
     email: userFromPayload.email ?? decodedUser?.email ?? '',
     isAdmin: Boolean(userFromPayload.admin ?? decodedUser?.admin ?? false),
+    currency: userFromPayload.currency ?? 'COP',
+    language: userFromPayload.language ?? 'ES',
+    theme: userFromPayload.theme ?? 'Light',
   };
 
   return { token, user };

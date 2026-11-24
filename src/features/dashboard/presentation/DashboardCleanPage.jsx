@@ -17,8 +17,8 @@ import { calculateBudgetSummary, calculateBudgetSummaryTotals } from '../../budg
 import { useI18n } from '../../../shared/i18n/I18nProvider.jsx';
 import * as budgetRepository from '../../budgets/infrastructure/budgetRepository.js';
 import { DashboardChart } from './DashboardChart.jsx';
+import { formatCurrency } from '../../../shared/i18n/currency.js';
 
-const currency = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' });
 const chartInitialState = [
   { month: 'Enero', income: 0, expenses: 0 },
   { month: 'Febrero', income: 0, expenses: 0 },
@@ -126,8 +126,8 @@ export function DashboardCleanPage() {
                   <DashboardChart monthlyBudget={chart} />
                 </div>
                 <div className="finance-summary-widgets">
-                  <SummaryWidget icon={<TrendingUp size={22} />} label="Total Income" value={currency.format(totals.income)} tone="income" />
-                  <SummaryWidget icon={<ReceiptText size={22} />} label="Fixed Expenses" value={currency.format(totals.fixedExpenses)} tone="expense" />
+                  <SummaryWidget icon={<TrendingUp size={22} />} label="Total Income" value={formatCurrency(totals.income)} tone="income" />
+                  <SummaryWidget icon={<ReceiptText size={22} />} label="Fixed Expenses" value={formatCurrency(totals.fixedExpenses)} tone="expense" />
                 </div>
               </section>
             }

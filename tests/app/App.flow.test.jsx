@@ -1,8 +1,8 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import { installApiMock } from '../test/mockApi.js';
-import { renderApp } from '../test/renderApp.jsx';
+import { installApiMock } from '../helpers/mockApi.js';
+import { renderApp } from '../helpers/renderApp.jsx';
 
 describe('FinTrack end-to-end flow', () => {
   it('registers, logs in, creates a budget, and verifies history totals', async () => {
@@ -12,14 +12,14 @@ describe('FinTrack end-to-end flow', () => {
 
     await user.type(screen.getByTestId('register-name'), 'Ada');
     await user.type(screen.getByTestId('register-lastname'), 'Lovelace');
-    await user.type(screen.getByTestId('register-username'), 'ada');
     await user.type(screen.getByTestId('register-email'), 'ada@example.com');
     await user.type(screen.getByTestId('register-password'), 'secret12');
     await user.type(screen.getByTestId('register-confirm-password'), 'secret12');
-    await user.click(screen.getByRole('button', { name: 'Crear cuenta' }));
+    await user.click(screen.getByLabelText(/Acepto los/));
+    await user.click(screen.getByRole('button', { name: 'Crear mi cuenta gratis' }));
 
     expect(await screen.findByRole('heading', { name: 'Ingresar' })).toBeInTheDocument();
-    await user.type(screen.getByRole('textbox', { name: 'E-mail', exact: true }), 'ada@example.com');
+    await user.type(screen.getByRole('textbox', { name: 'Correo electrónico', exact: true }), 'ada@example.com');
     await user.type(screen.getByLabelText('Contraseña', { exact: true }), 'secret12');
     await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
 
